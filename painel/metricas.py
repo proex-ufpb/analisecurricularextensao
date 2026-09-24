@@ -143,3 +143,88 @@ def linhas_percentuais(ativos):
         }
         for _, c in ordenados.iterrows()
     ]
+
+
+COMPONENTES = ["BASICA", "COMPLEMENTAR", "OPTATIVA", "FLEXIVEL"]
+COLUNAS_COMPONENTES = {
+    "BASICA": "CH_BASICA_PROFISSIONAL_EXT",
+    "COMPLEMENTAR": "CH_COMPL_OBRIG_EXT",
+    "OPTATIVA": "CH_OPTATIVA_EXT",
+    "FLEXIVEL": "CH_FLEXÍVEL_EXT",
+}
+ROTULOS_COMPONENTES = {
+    "BASICA": "Básica e profissional",
+    "COMPLEMENTAR": "Complementar obrigatória",
+    "OPTATIVA": "Optativa",
+    "FLEXIVEL": "Flexível",
+}
+COLUNA_TOTAL_EXT = "CH_TOTAL_EXT"
+
+
+def formatar_horas(valor):
+    if pd.isna(valor) or valor == 0:
+        return "—"
+    if float(valor).is_integer():
+        return f"{int(valor):,}".replace(",", ".")
+    return f"{valor:,.1f}".replace(",", "_").replace(".", ",").replace("_", ".")
+
+
+def cursos_com_extensao(ativos):
+    """Cursos ativos com carga horária de extensão; célula vazia de componente conta como zero hora."""
+    base = ativos[ativos["META"] != "NAO_IMPLANTADO"].copy()
+    for coluna in COLUNAS_COMPONENTES.values():
+        base[coluna] = base[coluna].fillna(0)
+    base[COLUNA_TOTAL_EXT] = base[COLUNA_TOTAL_EXT].fillna(0)
+    return base
+
+
+def resumo_componentes(base):
+    total = base[COLUNA_TOTAL_EXT].sum()
+    itens = []
+    for chave in COMPONENTES:
+        coluna = COLUNAS_COMPONENTES[chave]
+        horas = float(base[coluna].sum())
+        itens.append({
+            "chave": chave,
+            "rotulo": ROTULOS_COMPONENTES[chave],
+            "horas": formatar_horas(horas),
+            "percentual": (horas / total * 100) if total else 0.0,
+            "cursos": int((base[coluna] > 0).sum()),
+        })
+    obrigatorias = base["CH_BASICA_PROFISSIONAL_EXT"] + base["CH_COMPL_OBRIG_EXT"]
+    livres = base["CH_OPTATIVA_EXT"] + base["CH_FLEXÍVEL_EXT"]
+    destaques = {
+        "so_obrigatorias": int(((livres == 0) & (base[COLUNA_TOTAL_EXT] > 0)).sum()),
+        "maioria_livre": int((livres > obrigatorias).sum()),
+        "total_horas": formatar_horas(total),
+    }
+    return itens, destaques
+
+
+def componentes_por_centro(base):
+    colunas = list(COLUNAS_COMPONENTES.values())
+    tabela = base.groupby("CENTRO")[colunas].sum()
+    tabela.columns = COMPONENTES
+    tabela["TOTAL"] = tabela.sum(axis=1)
+    tabela["_centro"] = tabela.index
+    return tabela.sort_values(["TOTAL", "_centro"], ascending=[False, True]).drop(columns="_centro")
+
+
+def linhas_componentes(base):
+    ordenados = base.sort_values(["CENTRO", "CURSO"])
+    linhas = []
+    for _, c in ordenados.iterrows():
+        total = c[COLUNA_TOTAL_EXT]
+        obrigatorias = c["CH_BASICA_PROFISSIONAL_EXT"] + c["CH_COMPL_OBRIG_EXT"]
+        linha = {
+            "centro": c["CENTRO"],
+            "curso": formatar_nome(c["CURSO"]),
+            "emec": c["CÓDIGO E-MEC"] or "Não informado",
+            "total": formatar_horas(total),
+            "obrigatorias": (f"{obrigatorias / total * 100:.0f}%" if total else "—"),
+            "integralizado": formatar_percentual(c[COLUNA_PERCENTUAL]),
+        }
+        for chave, coluna in COLUNAS_COMPONENTES.items():
+            linha[chave] = formatar_horas(c[coluna])
+        linhas.append(linha)
+    return linhas

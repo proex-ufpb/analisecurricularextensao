@@ -31,4 +31,9 @@ document.addEventListener("DOMContentLoaded", () => {
     contagem: "contagem-perc",
     campos: { busca: "p-busca", centro: "p-centro" },
   });
+  ligarFiltro({
+    tabela: "#tabela-componentes",
+    contagem: "contagem-comp",
+    campos: { busca: "c-busca", centro: "c-centro" },
+  });
 });

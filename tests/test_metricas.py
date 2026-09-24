@@ -6,7 +6,13 @@ from painel.dados import carregar_linhas, cursos_ativos, cursos_unicos
 from painel.metricas import (
     classificar_meta,
     com_meta,
+    COLUNAS_COMPONENTES,
+    componentes_por_centro,
+    cursos_com_extensao,
+    formatar_horas,
     formatar_nome,
+    linhas_componentes,
+    resumo_componentes,
     linhas_percentuais,
     meta_por_centro,
     resumo_meta,
@@ -78,3 +84,46 @@ def test_linhas_percentuais_so_implantados_em_ordem_crescente():
     assert linhas[0]["curso"] == "Engenharia de Materiais"
     valores = [float(l["percentual"].rstrip("%").replace(",", ".")) for l in linhas]
     assert valores == sorted(valores)
+
+
+def base_extensao():
+    _, ativos = base_real()
+    return cursos_com_extensao(com_meta(ativos))
+
+
+def test_formatar_horas():
+    assert formatar_horas(0) == "—"
+    assert formatar_horas(float("nan")) == "—"
+    assert formatar_horas(390.0) == "390"
+    assert formatar_horas(358.5) == "358,5"
+    assert formatar_horas(18759.0) == "18.759"
+
+
+def test_componentes_somam_o_total_de_cada_curso():
+    base = base_extensao()
+    assert len(base) == 42
+    soma = sum(base[coluna] for coluna in COLUNAS_COMPONENTES.values())
+    assert (abs(soma - base["CH_TOTAL_EXT"]) < 0.01).all()
+
+
+def test_resumo_componentes_fecha_100_por_cento():
+    itens, destaques = resumo_componentes(base_extensao())
+    assert round(sum(i["percentual"] for i in itens), 6) == 100.0
+    assert destaques["total_horas"] == "18.759"
+    assert destaques["so_obrigatorias"] == 8
+    assert destaques["maioria_livre"] == 15
+
+
+def test_componentes_por_centro_preserva_o_total():
+    base = base_extensao()
+    tabela = componentes_por_centro(base)
+    assert tabela["TOTAL"].sum() == base["CH_TOTAL_EXT"].sum()
+    assert tabela["TOTAL"].is_monotonic_decreasing
+
+
+def test_linhas_componentes_uma_por_curso():
+    linhas = linhas_componentes(base_extensao())
+    assert len(linhas) == 42
+    biotec = next(l for l in linhas if l["curso"] == "Biotecnologia")
+    assert (biotec["BASICA"], biotec["COMPLEMENTAR"], biotec["OPTATIVA"], biotec["FLEXIVEL"]) == ("150", "120", "120", "—")
+    assert biotec["total"] == "390" and biotec["obrigatorias"] == "69%"

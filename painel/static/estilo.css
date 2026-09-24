@@ -59,6 +59,7 @@ h3 { margin: 28px 0 10px; font-size: 1.05rem; color: var(--texto); font-weight: 
 .normas p { margin: 0; padding: 12px 16px; background: var(--superficie); border: 1px solid var(--borda); border-left: 4px solid var(--azul); border-radius: 8px; color: var(--texto-2); }
 .normas strong { color: var(--azul); }
 
+.nota-topo { margin: 0 0 14px; }
 .nota { margin: 14px 0 0; color: var(--texto-2); font-size: 0.9rem; max-width: 90ch; }
 
 .cartao-grande { background: var(--superficie); border: 1px solid var(--borda); border-radius: var(--raio); padding: 16px; }

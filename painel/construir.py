@@ -9,12 +9,18 @@ from plotly.offline import get_plotlyjs
 from painel.dados import CSV_PADRAO, PRIORIDADE_STATUS, carregar_linhas, cursos_ativos, cursos_unicos
 from painel.metricas import (
     CLASSES_META,
+    COMPONENTES,
+    ROTULOS_COMPONENTES,
     ROTULOS_META,
     ROTULOS_STATUS,
     com_meta,
+    componentes_por_centro,
+    cursos_com_extensao,
+    linhas_componentes,
     linhas_percentuais,
     linhas_tabela,
     meta_por_centro,
+    resumo_componentes,
     resumo_meta,
     resumo_status,
     status_por_centro,
@@ -22,8 +28,10 @@ from painel.metricas import (
 from painel.tema import (
     AZUL_PROEX,
     CONTATO,
+    COR_TEXTO_COMPONENTES,
     COR_TEXTO_META,
     COR_TEXTO_NA_BARRA,
+    CORES_COMPONENTES,
     CORES_META,
     CORES_STATUS,
     EQUIPE,
@@ -88,6 +96,44 @@ def grafico_meta_por_centro(tabela):
     )
 
 
+def grafico_componentes_por_centro(tabela):
+    centros = list(tabela.index)
+    fig = go.Figure()
+    for chave in COMPONENTES:
+        horas = tabela[chave]
+        participacao = (horas / tabela["TOTAL"] * 100).fillna(0)
+        fig.add_bar(
+            y=centros,
+            x=participacao,
+            orientation="h",
+            name=ROTULOS_COMPONENTES[chave],
+            marker=dict(color=CORES_COMPONENTES[chave], line=dict(color="#FFFFFF", width=2)),
+            text=[f"{v:.0f}%" if v >= 7 else "" for v in participacao],
+            textposition="inside",
+            insidetextanchor="middle",
+            textfont=dict(color=COR_TEXTO_COMPONENTES[chave], size=12),
+            customdata=horas,
+            hovertemplate=(
+                "<b>%{y}</b><br>" + ROTULOS_COMPONENTES[chave]
+                + ": %{customdata:.0f} h (%{x:.0f}% da carga horária de extensão do centro)<extra></extra>"
+            ),
+        )
+    fig.update_layout(
+        barmode="stack",
+        height=max(320, 34 * len(centros) + 110),
+        margin=dict(l=8, r=8, t=8, b=8),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(family=FONTE, size=13, color="#15163A"),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0, title_text="", traceorder="normal"),
+        xaxis=dict(title="Participação na carga horária de extensão do centro", ticksuffix="%", range=[0, 100],
+                   gridcolor="#E6E8F2", zeroline=False),
+        yaxis=dict(autorange="reversed", automargin=True, title=""),
+        hoverlabel=dict(font=dict(family=FONTE)),
+    )
+    return _html(fig)
+
+
 def construir(csv=CSV_PADRAO, saida=SAIDA):
     linhas = carregar_linhas(csv)
     cursos = com_meta(cursos_unicos(linhas))
@@ -95,6 +141,8 @@ def construir(csv=CSV_PADRAO, saida=SAIDA):
     por_centro = status_por_centro(ativos)
     meta_centros = meta_por_centro(ativos)
     resumo_metas, com_dado = resumo_meta(ativos)
+    base_extensao = cursos_com_extensao(ativos)
+    resumo_comp, destaques = resumo_componentes(base_extensao)
 
     saida.mkdir(parents=True, exist_ok=True)
     (saida / "plotly.min.js").write_text(get_plotlyjs(), encoding="utf-8")
@@ -128,6 +176,14 @@ def construir(csv=CSV_PADRAO, saida=SAIDA):
         classes_meta=CLASSES_META,
         grafico_meta_centros=grafico_meta_por_centro(meta_centros),
         percentuais=linhas_percentuais(ativos),
+        componentes=COMPONENTES,
+        rotulos_componentes=ROTULOS_COMPONENTES,
+        cores_componentes=CORES_COMPONENTES,
+        resumo_componentes=resumo_comp,
+        destaques=destaques,
+        n_extensao=len(base_extensao),
+        grafico_componentes=grafico_componentes_por_centro(componentes_por_centro(base_extensao)),
+        linhas_componentes=linhas_componentes(base_extensao),
         cursos=linhas_tabela(cursos),
         centros=sorted(cursos["CENTRO"].unique()),
         contato=CONTATO,
