@@ -4,20 +4,21 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
-<title>Análise Curricular — Inserção Curricular da Extensão | PROEX/UFPB</title>
+<title>{{ titulo_pagina }}</title>
 <meta name="description" content="Acompanhamento da inserção curricular da extensão nos cursos de graduação da UFPB.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="estilo.css">
-<script src="tabela.js" defer></script>
+<link rel="stylesheet" href="{{ raiz }}estilo.css">
+<script src="{{ raiz }}plotly.min.js"></script>
+<script src="{{ raiz }}tabela.js" defer></script>
 </head>
 <body>
 <a class="pular" href="#conteudo">Ir para o conteúdo</a>
 <header class="topo">
   <div class="topo-interno">
-    <img class="logo-ufpb" src="logo-ufpb.svg" alt="Brasão da Universidade Federal da Paraíba">
-    <img class="logo-proex" src="logo-proex.png" alt="PROEX — Pró-Reitoria de Extensão/UFPB">
+    <img class="logo-ufpb" src="{{ raiz }}logo-ufpb.svg" alt="Brasão da Universidade Federal da Paraíba">
+    <img class="logo-proex" src="{{ raiz }}logo-proex.png" alt="PROEX — Pró-Reitoria de Extensão/UFPB">
   </div>
 </header>
 
@@ -27,6 +28,13 @@
     <p class="lead">Situação da inserção curricular da extensão nos cursos de graduação da UFPB.</p>
     <p class="atualizacao">Dados atualizados em {{ atualizado_em }}</p>
   </section>
+
+  <nav class="filtro-centro" aria-label="Filtrar por Centro">
+    <span class="filtro-rotulo">Centro</span>
+    <a class="chip{% if not centro_atual %} ativo{% endif %}" href="{{ raiz }}index.html"{% if not centro_atual %} aria-current="page"{% endif %}>Todos</a>
+    {% for c in todos_centros %}<a class="chip{% if c.nome == centro_atual %} ativo{% endif %}" href="{{ raiz }}centro/{{ c.slug }}.html"{% if c.nome == centro_atual %} aria-current="page"{% endif %}>{{ c.nome }}</a>
+    {% endfor %}
+  </nav>
 
   <section aria-labelledby="t-resumo">
     <h2 id="t-resumo">Visão geral</h2>
@@ -48,8 +56,8 @@
 
   <section aria-labelledby="t-centros">
     <h2 id="t-centros">Situação de implantação por Centro</h2>
+    {% if grafico %}
     <div class="cartao-grande">
-      <script src="plotly.min.js"></script>
       {{ grafico|safe }}
       <details class="tabela-dados">
         <summary>Ver os dados do gráfico em tabela</summary>
@@ -67,10 +75,13 @@
         </div>
       </details>
     </div>
+    {% else %}<p class="nota">Nenhum curso ativo neste Centro.</p>
+    {% endif %}
   </section>
 
   <section aria-labelledby="t-periodo">
     <h2 id="t-periodo">Quantidade de cursos com inserção curricular da extensão por período</h2>
+    {% if grafico_periodo %}
     <div class="cartao-grande">
       {{ grafico_periodo|safe }}
       {% if sem_periodo %}<p class="nota">{{ sem_periodo }} curso(s) implantado(s) sem período válido no PPC novo (não aparece(m) no gráfico).</p>{% endif %}
@@ -110,10 +121,13 @@
         </div>
       </details>
     </div>
+    {% else %}<p class="nota">Nenhum curso implantado com período do PPC novo neste Centro.</p>
+    {% endif %}
   </section>
 
   <section aria-labelledby="t-oferta">
     <h2 id="t-oferta">Percentual dos componentes com extensão inseridos no Currículo</h2>
+    {% if n_extensao %}
     {% if oferta.menores %}<p class="nota">Atenção: {{ oferta.menores }} curso(s) aparecem com oferta menor que a exigência; vale conferir na planilha.</p>{% endif %}
 
     <h3>Média da exigência de integralização pelo aluno e da oferta de carga horária de extensão por Centro</h3>
@@ -155,10 +169,13 @@
         </div>
       </details>
     </div>
+    {% else %}<p class="nota">Nenhum curso deste Centro tem percentual de extensão.</p>
+    {% endif %}
   </section>
 
   <section aria-labelledby="t-comp">
     <h2 id="t-comp">Distribuição da carga horária de extensão por componentes</h2>
+    {% if n_extensao %}
     <div class="cartoes">
       <div class="cartao cartao-total">
         <span class="numero">{{ total_horas }}</span>
@@ -212,10 +229,13 @@
         </div>
       </details>
     </div>
+    {% else %}<p class="nota">Nenhum curso deste Centro tem percentual de extensão.</p>
+    {% endif %}
   </section>
 
   <section aria-labelledby="t-uce">
     <h2 id="t-uce">Unidades Curriculares de Extensão (UCE)</h2>
+    {% if n_extensao %}
     <div class="cartoes">
       <div class="cartao cartao-total">
         <span class="numero">{{ uce.com_uce }}</span>
@@ -271,6 +291,8 @@
         </div>
       </details>
     </div>
+    {% else %}<p class="nota">Nenhum curso deste Centro tem percentual de extensão.</p>
+    {% endif %}
   </section>
 
   <section aria-labelledby="t-cursos">

@@ -2,6 +2,7 @@ function ligarFiltro({ tabela, contagem, campos }) {
   const linhas = Array.from(document.querySelectorAll(`${tabela} tbody tr`));
   const elementos = Object.fromEntries(Object.entries(campos).map(([chave, id]) => [chave, document.getElementById(id)]));
   const saida = document.getElementById(contagem);
+  if (!saida || Object.values(elementos).some((campo) => !campo)) return;
 
   function filtrar() {
     let visiveis = 0;

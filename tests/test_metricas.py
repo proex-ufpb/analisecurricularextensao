@@ -291,3 +291,9 @@ def test_implantados_por_periodo_da_base_real():
     assert list(total)[0] == "2021.1" and list(total)[-1] == "2027.1"
     linhas = linhas_periodo(ativos)
     assert len(linhas) == 37 and linhas[0]["periodo"] == "2021.1"
+
+
+def test_implantados_por_periodo_sem_nenhum_implantado_nao_quebra():
+    ativos = frame_periodo(("EM ANDAMENTO", "2024.1"))
+    assert implantados_por_periodo(ativos) == ([], 0)
+    assert implantados_por_periodo(ativos.iloc[0:0]) == ([], 0)

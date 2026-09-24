@@ -1,3 +1,4 @@
+import re
 import shutil
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -77,7 +78,7 @@ def _barras_por_centro(tabela, categorias, rotulos, cores, cores_texto, titulo_x
         )
     fig.update_layout(
         barmode="stack",
-        height=max(320, 34 * len(centros) + 110),
+        height=max(150, 34 * len(centros) + 110),
         margin=dict(l=8, r=8, t=8, b=8),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
@@ -152,7 +153,7 @@ def grafico_exigencia_oferta(tabela):
             marker=dict(color=CORES_OFERTA[chave], line=dict(color="#FFFFFF", width=1)),
             text=[f"{v:.1f}".replace(".", ",") for v in tabela[chave]],
             textposition="outside",
-            textangle=-90,
+            textangle=-90 if len(centros) > 1 else 0,
             cliponaxis=False,
             textfont=dict(size=11, color="#15163A"),
             customdata=tabela["CURSOS"],
@@ -164,6 +165,7 @@ def grafico_exigencia_oferta(tabela):
     fig.update_layout(
         barmode="group",
         bargap=0.25,
+        uniformtext=dict(minsize=9, mode="hide"),
         height=420,
         margin=dict(l=8, r=8, t=44, b=8),
         paper_bgcolor="rgba(0,0,0,0)",
@@ -173,7 +175,7 @@ def grafico_exigencia_oferta(tabela):
         legend=dict(orientation="v", yanchor="top", y=1, xanchor="right", x=1, title_text="", traceorder="normal",
                     bgcolor="rgba(255,255,255,0.9)", bordercolor="#DDE0EE", borderwidth=1),
         xaxis=dict(title="Centro", type="category", gridcolor="#E6E8F2"),
-        yaxis=dict(title="Média dos cursos do Centro", ticksuffix="%", range=[0, 26], dtick=5, gridcolor="#E6E8F2",
+        yaxis=dict(ticksuffix="%", range=[0, 26], dtick=5, gridcolor="#E6E8F2",
                    zeroline=False),
         hoverlabel=dict(font=dict(family=FONTE)),
     )
@@ -234,22 +236,17 @@ def grafico_implantados_por_periodo(periodos):
         showlegend=False,
         bargap=0.3,
         xaxis=dict(title="Período do PPC novo (ano.semestre)", type="category", gridcolor="#E6E8F2"),
-        yaxis=dict(title="Cursos implantados", gridcolor="#E6E8F2", zeroline=False, rangemode="tozero", dtick=2),
+        yaxis=dict(gridcolor="#E6E8F2", zeroline=False, rangemode="tozero", dtick=2),
         hoverlabel=dict(font=dict(family=FONTE)),
     )
     return _html(fig)
 
 
-def construir(csv=CSV_PADRAO, saida=SAIDA):
-    linhas = carregar_linhas(csv)
-    cursos = com_meta(cursos_unicos(linhas))
-    ativos = cursos_ativos(cursos)
-    por_centro = status_por_centro(ativos)
-    base_extensao = cursos_com_extensao(ativos)
-    resumo_comp, total_horas = resumo_componentes(base_extensao)
-    oferta = resumo_oferta(base_extensao)
-    periodos, sem_periodo = implantados_por_periodo(ativos)
+def slug_centro(centro):
+    return re.sub(r"[^a-z0-9]+", "-", centro.lower()).strip("-")
 
+
+def _copiar_estaticos(saida):
     saida.mkdir(parents=True, exist_ok=True)
     (saida / "plotly.min.js").write_text(get_plotlyjs(), encoding="utf-8")
     for pasta in ("static", "../assets"):
@@ -258,20 +255,32 @@ def construir(csv=CSV_PADRAO, saida=SAIDA):
             if arquivo.suffix in {".css", ".js", ".png", ".svg"}:
                 shutil.copy(arquivo, saida / arquivo.name)
 
-    ambiente = Environment(
-        loader=FileSystemLoader(Path(__file__).resolve().parent / "templates"),
-        autoescape=select_autoescape(["html", "j2"]),
-    )
-    html = ambiente.get_template("index.html.j2").render(
+
+def _renderizar(ambiente, cursos, todos_centros, centro, raiz, atualizado_em):
+    """Monta uma página com os cursos recebidos; centro=None é a página geral."""
+    ativos = cursos_ativos(cursos)
+    por_centro = status_por_centro(ativos)
+    base_extensao = cursos_com_extensao(ativos)
+    resumo_comp, total_horas = resumo_componentes(base_extensao)
+    periodos, sem_periodo = implantados_por_periodo(ativos)
+    tem_extensao = len(base_extensao) > 0
+
+    return ambiente.get_template("index.html.j2").render(
+        raiz=raiz,
+        centro_atual=centro,
+        titulo_pagina="Análise Curricular — Inserção Curricular da Extensão | PROEX/UFPB"
+        if centro is None
+        else f"Centro {centro} — Análise Curricular | PROEX/UFPB",
+        todos_centros=[{"nome": c, "slug": slug_centro(c)} for c in todos_centros],
         n_ativos=len(ativos),
         n_fora=len(cursos) - len(ativos),
         n_cursos=len(cursos),
         status=resumo_status(ativos),
         cores=CORES_STATUS,
-        grafico=grafico_status_por_centro(por_centro),
+        grafico=grafico_status_por_centro(por_centro) if len(por_centro) else "",
         tabela_centros=[
-            {"centro": centro, **{s: int(linha[s]) for s in PRIORIDADE_STATUS}, "total": int(linha["TOTAL"])}
-            for centro, linha in por_centro.iterrows()
+            {"centro": c, **{s: int(linha[s]) for s in PRIORIDADE_STATUS}, "total": int(linha["TOTAL"])}
+            for c, linha in por_centro.iterrows()
         ],
         rotulos=ROTULOS_STATUS,
         prioridade=PRIORIDADE_STATUS,
@@ -282,28 +291,48 @@ def construir(csv=CSV_PADRAO, saida=SAIDA):
         resumo_componentes=resumo_comp,
         total_horas=total_horas,
         n_extensao=len(base_extensao),
-        grafico_componentes=grafico_componentes_por_centro(componentes_por_centro(base_extensao)),
+        grafico_componentes=grafico_componentes_por_centro(componentes_por_centro(base_extensao)) if tem_extensao else "",
         linhas_componentes=linhas_componentes(base_extensao),
-        oferta=oferta,
-        grafico_periodo=grafico_implantados_por_periodo(periodos),
+        oferta=resumo_oferta(base_extensao),
+        grafico_periodo=grafico_implantados_por_periodo(periodos) if periodos else "",
         periodos=periodos,
         sem_periodo=sem_periodo,
         linhas_periodo=linhas_periodo(ativos),
         uce=resumo_uce(base_extensao),
         cor_uce=COR_UCE,
-        grafico_uce=grafico_uce_por_centro(uce_por_centro(base_extensao)),
+        grafico_uce=grafico_uce_por_centro(uce_por_centro(base_extensao)) if tem_extensao else "",
         linhas_uce=linhas_uce(base_extensao),
         cores_oferta=CORES_OFERTA,
-        grafico_oferta=grafico_exigencia_oferta(oferta_por_centro(base_extensao)),
+        grafico_oferta=grafico_exigencia_oferta(oferta_por_centro(base_extensao)) if tem_extensao else "",
         linhas_oferta=linhas_oferta(base_extensao),
         cursos=linhas_tabela(cursos),
-        centros=sorted(cursos["CENTRO"].unique()),
+        centros=[centro] if centro else todos_centros,
         contato=CONTATO,
         equipe=EQUIPE,
         azul=AZUL_PROEX,
-        atualizado_em=datetime.now(FUSO_BRASILIA).strftime("%d/%m/%Y"),
+        atualizado_em=atualizado_em,
     )
-    (saida / "index.html").write_text(html, encoding="utf-8")
+
+
+def construir(csv=CSV_PADRAO, saida=SAIDA):
+    """Gera a página geral (index.html) e uma página por Centro (centro/<sigla>.html)."""
+    cursos = com_meta(cursos_unicos(carregar_linhas(csv)))
+    todos_centros = sorted(cursos["CENTRO"].unique())
+    _copiar_estaticos(saida)
+    (saida / "centro").mkdir(exist_ok=True)
+
+    ambiente = Environment(
+        loader=FileSystemLoader(Path(__file__).resolve().parent / "templates"),
+        autoescape=select_autoescape(["html", "j2"]),
+    )
+    atualizado_em = datetime.now(FUSO_BRASILIA).strftime("%d/%m/%Y")
+
+    paginas = [(None, saida / "index.html", "")]
+    paginas += [(c, saida / "centro" / f"{slug_centro(c)}.html", "../") for c in todos_centros]
+    for centro, destino, raiz in paginas:
+        recorte = cursos if centro is None else cursos[cursos["CENTRO"] == centro]
+        html = _renderizar(ambiente, recorte, todos_centros, centro, raiz, atualizado_em)
+        destino.write_text(html, encoding="utf-8")
     return saida / "index.html"
 
 

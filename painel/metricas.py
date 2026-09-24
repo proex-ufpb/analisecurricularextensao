@@ -366,7 +366,7 @@ def _semestres_entre(primeiro, ultimo):
 def implantados_por_periodo(ativos):
     """Cursos ativos com STATUS Implantado por período (ano.semestre) do PPC novo, sem pular semestres."""
     implantados = ativos[ativos["STATUS"] == "IMPLANTADO"]
-    validos = implantados[implantados["PPC_NOVO_PERIODO"].map(lambda p: bool(PADRAO_PERIODO.match(p)))]
+    validos = implantados[implantados["PPC_NOVO_PERIODO"].map(lambda p: bool(PADRAO_PERIODO.match(p))).astype(bool)]
     contagem = validos["PPC_NOVO_PERIODO"].value_counts()
     if contagem.empty:
         return [], len(implantados)
