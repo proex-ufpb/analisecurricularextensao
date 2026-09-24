@@ -34,7 +34,7 @@
     <label for="filtro-centro">Centro</label>
     <select id="filtro-centro" autocomplete="off" data-filtrado="{{ 1 if centro_atual else 0 }}" data-inicio="{{ raiz }}index.html">
       <option value="{{ raiz }}index.html"{% if not centro_atual %} selected{% endif %}>Todos</option>
-      {% for c in todos_centros %}<option value="{{ raiz }}centro/{{ c.slug }}.html"{% if c.nome == centro_atual %} selected{% endif %}>{{ c.nome }}{% if c.descricao %} ({{ c.descricao }}){% endif %}</option>
+      {% for c in todos_centros %}<option value="{{ raiz }}centro/{{ c.slug }}.html"{% if c.nome == centro_atual %} selected{% endif %}>{{ c.nome }}{% if c.descricao %} – {{ c.descricao }}{% endif %}</option>
       {% endfor %}
     </select>
     <noscript>

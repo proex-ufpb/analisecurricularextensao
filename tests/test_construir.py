@@ -105,13 +105,13 @@ def test_todas_as_paginas_tem_menu_cabecalho_e_pelo_menos_um_grafico(site):
         assert "plotly-graph-div" in html, pagina.name
 
 
-def test_menu_mostra_a_descricao_de_cada_centro_entre_parenteses(site):
+def test_menu_mostra_a_descricao_de_cada_centro_depois_de_um_traco(site):
     html = (site / "index.html").read_text(encoding="utf-8")
-    textos = {t.split(" (")[0]: t for _, _, t in opcoes_do_menu(html) if t != "Todos"}
-    assert textos["CCEN"] == "CCEN (Centro de Ciências Exatas e da Natureza)"
-    assert textos["CPT-ETS"] == "CPT-ETS (Centro Profissional e Tecnológico – Escola Técnica de Saúde)"
-    assert textos["CCHSA"] == "CCHSA (Centro de Ciências Humanas, Sociais e Agrárias)"
-    assert len(textos) == 17 and all(" (" in t and t.endswith(")") for t in textos.values())
+    textos = {t.split(" – ")[0]: t for _, _, t in opcoes_do_menu(html) if t != "Todos"}
+    assert textos["CCEN"] == "CCEN – Centro de Ciências Exatas e da Natureza"
+    assert textos["CPT-ETS"] == "CPT-ETS – Centro Profissional e Tecnológico – Escola Técnica de Saúde"
+    assert textos["CCHSA"] == "CCHSA – Centro de Ciências Humanas, Sociais e Agrárias"
+    assert len(textos) == 17 and all(" – " in t and "(" not in t for t in textos.values())
 
 
 def test_todo_centro_da_base_tem_descricao_cadastrada():
@@ -123,4 +123,4 @@ def test_todo_centro_da_base_tem_descricao_cadastrada():
 
 def test_titulo_da_pagina_do_centro_traz_a_descricao(site):
     html = (site / "centro" / "ccs.html").read_text(encoding="utf-8")
-    assert "<title>CCS (Centro de Ciências da Saúde) — Análise Curricular | PROEX/UFPB</title>" in html
+    assert "<title>CCS – Centro de Ciências da Saúde | Análise Curricular | PROEX/UFPB</title>" in html
