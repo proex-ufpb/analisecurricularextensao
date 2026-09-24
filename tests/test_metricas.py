@@ -151,9 +151,6 @@ def test_resumo_oferta_horas_e_destaques():
     assert resumo["horas_exigidas"] == "14.797,5"
     assert resumo["horas_ofertadas"] == "18.759"
     assert resumo["horas_a_mais"] == "3.961,5"
-    assert resumo["acima_teto"] == 9
-    assert resumo["maior_curso"] == "Hotelaria" and resumo["maior_centro"] == "CCTA"
-    assert resumo["maior_margem"] == "+16,25"
 
 
 def test_oferta_por_centro_media_exigido_menor_ou_igual_ao_ofertado():

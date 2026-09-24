@@ -129,32 +129,6 @@
   <section aria-labelledby="t-oferta">
     <h2 id="t-oferta">Extensão ofertada pelo curso</h2>
     <p class="nota nota-topo">É a carga horária de extensão que o curso disponibiliza nos seus componentes curriculares. A oferta nunca é menor do que a exigência do aluno: ela é igual ou maior. Por exemplo, o aluno precisa integralizar 10% da carga horária do curso, mas o curso oferta 13%, e o aluno escolhe entre as opções.</p>
-    <div class="cartoes">
-      <div class="cartao cartao-total">
-        <span class="numero">{{ oferta.maiores }}</span>
-        <span class="rotulo">de {{ oferta.total }} cursos ofertam mais extensão do que o aluno precisa integralizar</span>
-      </div>
-      <div class="cartao">
-        <span class="rotulo"><i class="marca" style="background: {{ cores_oferta.OFERTADO }}"></i>Oferta maior que a exigência</span>
-        <span class="numero">{{ oferta.maiores }}</span>
-        <span class="percentual">{{ "%.1f"|format(oferta.pct_maiores)|replace(".", ",") }}% dos cursos: o aluno escolhe</span>
-      </div>
-      <div class="cartao">
-        <span class="rotulo"><i class="marca" style="background: {{ cores_oferta.EXIGIDO }}"></i>Oferta igual à exigência</span>
-        <span class="numero">{{ oferta.iguais }}</span>
-        <span class="percentual">{{ "%.1f"|format(oferta.pct_iguais)|replace(".", ",") }}% dos cursos: o aluno cursa tudo</span>
-      </div>
-      <div class="cartao">
-        <span class="rotulo">Maior margem (p.p.)</span>
-        <span class="numero">{{ oferta.maior_margem }}</span>
-        <span class="percentual">{{ oferta.maior_curso }} ({{ oferta.maior_centro }}): exige {{ oferta.maior_exigido }}, oferta {{ oferta.maior_ofertado }}</span>
-      </div>
-      <div class="cartao">
-        <span class="rotulo">Oferta acima de 15%</span>
-        <span class="numero">{{ oferta.acima_teto }}</span>
-        <span class="percentual">curso(s), com a exigência do aluno dentro da faixa</span>
-      </div>
-    </div>
     <p class="nota">Nos {{ oferta.total }} cursos, os alunos precisam integralizar {{ oferta.horas_exigidas }} h de extensão e os cursos ofertam {{ oferta.horas_ofertadas }} h ({{ oferta.horas_a_mais }} h a mais, {{ "%.1f"|format(oferta.pct_horas_a_mais)|replace(".", ",") }}%). A faixa de 10% a 15% vale para a exigência do aluno, não para a oferta. A margem é a diferença, em pontos percentuais (p.p.), entre o % ofertado e o % a integralizar.{% if oferta.menores %} Atenção: {{ oferta.menores }} curso(s) aparecem com oferta menor que a exigência; vale conferir na planilha.{% endif %}</p>
 
     <h3>Exigência e oferta por centro</h3>

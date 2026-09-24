@@ -247,26 +247,13 @@ def formatar_pp(valor):
 def resumo_oferta(base):
     """Compara o que o aluno precisa integralizar com o que o curso oferta."""
     margem = _margem_pp(base)
-    total = len(base)
-    iguais = int((margem.abs() <= 1e-6).sum())
-    maiores = int((margem > 1e-6).sum())
-    maior = base.loc[margem.idxmax()]
     horas_exigidas = float(base[COLUNA_HORAS_EXIGIDAS].fillna(0).sum())
     horas_ofertadas = float(base[COLUNA_TOTAL_EXT].sum())
     return {
-        "total": total,
-        "iguais": iguais,
-        "maiores": maiores,
+        "total": len(base),
+        "iguais": int((margem.abs() <= 1e-6).sum()),
+        "maiores": int((margem > 1e-6).sum()),
         "menores": int((margem < -1e-6).sum()),
-        "pct_iguais": iguais / total * 100 if total else 0.0,
-        "pct_maiores": maiores / total * 100 if total else 0.0,
-        "margem_media": formatar_pp(margem.mean()),
-        "maior_margem": formatar_pp(margem.max()),
-        "maior_curso": formatar_nome(maior["CURSO"]),
-        "maior_centro": maior["CENTRO"],
-        "maior_exigido": formatar_percentual(maior[COLUNA_PERCENTUAL]),
-        "maior_ofertado": formatar_percentual(maior[COLUNA_OFERTA]),
-        "acima_teto": int((base[COLUNA_OFERTA] > LIMITE_MAXIMO + TOLERANCIA).sum()),
         "horas_exigidas": formatar_horas(horas_exigidas),
         "horas_ofertadas": formatar_horas(horas_ofertadas),
         "horas_a_mais": formatar_horas(horas_ofertadas - horas_exigidas),
