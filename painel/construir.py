@@ -42,6 +42,7 @@ from painel.tema import (
     CORES_OFERTA,
     CORES_STATUS,
     EQUIPE,
+    URL_ENVIO_RELATORIO,
 )
 
 RAIZ = Path(__file__).resolve().parent.parent
@@ -309,6 +310,7 @@ def _renderizar(ambiente, cursos, todos_centros, centro, raiz, atualizado_em):
         centros=[centro] if centro else todos_centros,
         contato=CONTATO,
         equipe=EQUIPE,
+        url_relatorio=URL_ENVIO_RELATORIO,
         azul=AZUL_PROEX,
         atualizado_em=atualizado_em,
     )

@@ -1,0 +1,54 @@
+name: Enviar relatório de ações prioritárias
+
+# Só roda sob demanda (botão "Enviar relatório" do painel ou Run workflow no GitHub). Não há agendamento.
+on:
+  workflow_dispatch:
+    inputs:
+      solicitante:
+        description: "E-mail de quem pediu o envio (registrado no rodapé do relatório)"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  enviar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Exportar planilha (dados mais recentes)
+        env:
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          SHEET_ID: ${{ secrets.SHEET_ID }}
+        run: python scripts/exportar_planilha.py
+
+      - name: Gerar relatório
+        env:
+          SOLICITANTE: ${{ inputs.solicitante }}
+        run: python -m painel.relatorio --solicitante "$SOLICITANTE"
+
+      - name: Ler assunto
+        id: assunto
+        run: echo "texto=$(cat relatorio/assunto.txt)" >> "$GITHUB_OUTPUT"
+
+      - name: Enviar por e-mail
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          to: ${{ secrets.MAIL_TO }}
+          from: PROEX/UFPB - Análise Curricular <${{ secrets.MAIL_USERNAME }}>
+          subject: ${{ steps.assunto.outputs.texto }}
+          html_body: file://relatorio/relatorio.html

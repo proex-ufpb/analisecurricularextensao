@@ -368,6 +368,7 @@
       <p><a href="mailto:{{ contato.email }}">{{ contato.email }}</a></p>
       <p>Ramal: {{ contato.ramal }}</p>
       <p class="fonte">Pró-Reitoria de Extensão — Universidade Federal da Paraíba</p>
+      {% if url_relatorio %}<p class="fonte"><a href="{{ url_relatorio }}" rel="noopener">Equipe PROEX: enviar relatório de ações prioritárias</a></p>{% endif %}
     </div>
     <div>
       <h2>Equipe</h2>

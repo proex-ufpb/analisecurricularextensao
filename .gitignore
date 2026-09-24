@@ -2,3 +2,4 @@ proex-analise-curricular-*.json
 .env
 __pycache__/
 site/
+relatorio/

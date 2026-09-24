@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Relatório de Ações Prioritárias — Análise Curricular</title>
+</head>
+<body style="margin:0;padding:0;background:#f5f6fb;font-family:Arial,Helvetica,sans-serif;color:#15163a;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f5f6fb;">
+<tr><td align="center" style="padding:16px;">
+<table role="presentation" width="720" cellpadding="0" cellspacing="0" style="max-width:720px;width:100%;background:#ffffff;border:1px solid #dde0ee;">
+
+<tr><td style="background:{{ azul }};color:#ffffff;padding:20px 24px;">
+  <div style="font-size:12px;letter-spacing:1px;">PROEX/UFPB</div>
+  <div style="font-size:22px;font-weight:bold;margin-top:4px;">Relatório de Ações Prioritárias</div>
+  <div style="font-size:14px;margin-top:4px;">Análise curricular — inserção curricular da extensão</div>
+</td></tr>
+
+<tr><td style="padding:20px 24px;font-size:14px;line-height:1.5;">
+  <p style="margin:0 0 12px;">Posição dos dados em <strong>{{ data }}</strong>. Considera os <strong>{{ n_ativos }} cursos ativos</strong>, contados uma única vez pelo código e-MEC.</p>
+
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="6"><tr>
+    {% for s in status %}
+    <td style="background:#f5f6fb;border:1px solid #dde0ee;padding:10px;text-align:center;">
+      <div style="font-size:22px;font-weight:bold;">{{ s.total }}</div>
+      <div style="font-size:12px;">{{ s.rotulo }}<br>{{ "%.1f"|format(s.percentual)|replace(".", ",") }}%</div>
+    </td>
+    {% endfor %}
+  </tr></table>
+
+  <p style="margin:16px 0 0;"><strong>{{ total_acoes }} ações</strong> foram identificadas, ordenadas por proximidade da conclusão do processo.</p>
+</td></tr>
+
+{% if por_centro %}
+<tr><td style="padding:0 24px 8px;">
+  <h2 style="font-size:16px;color:{{ azul }};margin:8px 0;">Ações por Centro</h2>
+  <table role="presentation" width="100%" cellpadding="6" cellspacing="0" style="border-collapse:collapse;font-size:13px;">
+    <tr style="background:#eceefa;color:{{ azul }};text-align:left;">
+      <th style="border-bottom:1px solid #dde0ee;">Centro</th>
+      <th style="border-bottom:1px solid #dde0ee;text-align:right;">Prioridade 1</th>
+      <th style="border-bottom:1px solid #dde0ee;text-align:right;">Prioridade 2</th>
+      <th style="border-bottom:1px solid #dde0ee;text-align:right;">Prioridade 3</th>
+      <th style="border-bottom:1px solid #dde0ee;text-align:right;">Total</th>
+    </tr>
+    {% for l in por_centro %}
+    <tr>
+      <td style="border-bottom:1px solid #dde0ee;">{{ l.centro }}</td>
+      <td style="border-bottom:1px solid #dde0ee;text-align:right;">{{ l.n1 }}</td>
+      <td style="border-bottom:1px solid #dde0ee;text-align:right;">{{ l.n2 }}</td>
+      <td style="border-bottom:1px solid #dde0ee;text-align:right;">{{ l.n3 }}</td>
+      <td style="border-bottom:1px solid #dde0ee;text-align:right;font-weight:bold;">{{ l.total }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</td></tr>
+{% endif %}
+
+{% for grupo in prioridades %}
+<tr><td style="padding:8px 24px;">
+  <h2 style="font-size:16px;color:{{ azul }};margin:16px 0 2px;">{{ grupo.titulo }} ({{ grupo["itens"]|length }})</h2>
+  <div style="font-size:12px;color:#4a4c69;margin-bottom:6px;">{{ nomes_nivel[grupo.nivel] }} · {{ grupo.descricao }}</div>
+  <table role="presentation" width="100%" cellpadding="6" cellspacing="0" style="border-collapse:collapse;font-size:13px;">
+    <tr style="background:#eceefa;color:{{ azul }};text-align:left;">
+      <th style="border-bottom:1px solid #dde0ee;">Centro</th>
+      <th style="border-bottom:1px solid #dde0ee;">Curso</th>
+      <th style="border-bottom:1px solid #dde0ee;">e-MEC</th>
+      <th style="border-bottom:1px solid #dde0ee;">Detalhe</th>
+    </tr>
+    {% for i in grupo["itens"] %}
+    <tr>
+      <td style="border-bottom:1px solid #dde0ee;vertical-align:top;">{{ i.centro }}</td>
+      <td style="border-bottom:1px solid #dde0ee;vertical-align:top;">{{ i.curso }}</td>
+      <td style="border-bottom:1px solid #dde0ee;vertical-align:top;">{{ i.emec }}</td>
+      <td style="border-bottom:1px solid #dde0ee;vertical-align:top;">{{ i.detalhe }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</td></tr>
+{% endfor %}
+
+{% if alertas %}
+<tr><td style="padding:8px 24px;">
+  <h2 style="font-size:16px;color:{{ azul }};margin:20px 0 2px;">Alertas de dados a conferir na planilha</h2>
+  {% for alerta in alertas %}
+  <div style="font-weight:bold;font-size:13px;margin:10px 0 4px;">{{ alerta.titulo }} ({{ alerta["itens"]|length }})</div>
+  <table role="presentation" width="100%" cellpadding="6" cellspacing="0" style="border-collapse:collapse;font-size:13px;">
+    {% for i in alerta["itens"] %}
+    <tr>
+      <td style="border-bottom:1px solid #dde0ee;vertical-align:top;width:70px;">{{ i.centro }}</td>
+      <td style="border-bottom:1px solid #dde0ee;vertical-align:top;">{{ i.curso }} ({{ i.emec }})<br><span style="color:#4a4c69;">{{ i.detalhe }}</span></td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% endfor %}
+</td></tr>
+{% endif %}
+
+<tr><td style="padding:20px 24px;font-size:12px;color:#4a4c69;border-top:1px solid #dde0ee;">
+  Relatório gerado em {{ data }} às {{ hora }} (horário de Brasília){% if solicitante %} a pedido de {{ solicitante }}{% endif %}.
+  {% if url_painel %}<br>Painel: <a href="{{ url_painel }}" style="color:{{ azul }};">{{ url_painel }}</a>{% endif %}
+  <br>Contato: {{ contato.email }} · ramal {{ contato.ramal }}
+</td></tr>
+
+</table>
+</td></tr>
+</table>
+</body>
+</html>

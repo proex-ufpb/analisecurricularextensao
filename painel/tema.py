@@ -1,3 +1,7 @@
+URL_PAINEL = "https://proex-ufpb.github.io/analisecurricularextensao/"
+# Endereço do aplicativo web do Apps Script (ver apps-script/LEIAME.md). Vazio = o painel não mostra o link.
+URL_ENVIO_RELATORIO = ""
+
 AZUL_PROEX = "#2D2E83"
 VERMELHO_PROEX = "#E30613"
 
