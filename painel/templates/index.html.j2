@@ -176,27 +176,11 @@
     <div class="cartoes">
       <div class="cartao cartao-total">
         <span class="numero">{{ uce.com_uce }}</span>
-        <span class="rotulo">de {{ uce.total }} cursos com percentual de extensão têm UCE</span>
+        <span class="rotulo">de {{ uce.total }} cursos com percentual de extensão criaram UCEs</span>
       </div>
       <div class="cartao">
-        <span class="rotulo"><i class="marca" style="background: {{ cor_uce }}"></i>UCEs</span>
+        <span class="rotulo"><i class="marca" style="background: {{ cor_uce }}"></i>UCEs criadas</span>
         <span class="numero">{{ uce.qtde }}</span>
-        <span class="percentual">unidades curriculares de extensão</span>
-      </div>
-      <div class="cartao">
-        <span class="rotulo">Carga horária das UCEs</span>
-        <span class="numero">{{ uce.horas }} h</span>
-        <span class="percentual">média de {{ uce.media_horas }} h por curso com UCE</span>
-      </div>
-      <div class="cartao">
-        <span class="rotulo">Créditos das UCEs</span>
-        <span class="numero">{{ uce.creditos }}</span>
-        <span class="percentual">créditos em UCE</span>
-      </div>
-      <div class="cartao">
-        <span class="rotulo">Sem informação de UCE</span>
-        <span class="numero">{{ uce.sem_info }}</span>
-        <span class="percentual">curso(s) sem UCE informada na planilha{% if uce.sem_uce %}; {{ uce.sem_uce }} com UCE zero{% endif %}</span>
       </div>
     </div>
 

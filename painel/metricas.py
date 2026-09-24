@@ -304,17 +304,10 @@ def _total(serie):
 
 def resumo_uce(base):
     base = com_uce(base)
-    contagem = base["UCE_CLASSE"].value_counts()
-    com = base[base["UCE_CLASSE"] == "COM_UCE"]
     return {
         "total": len(base),
-        "com_uce": int(contagem.get("COM_UCE", 0)),
-        "sem_uce": int(contagem.get("SEM_UCE", 0)),
-        "sem_info": int(contagem.get("SEM_INFO", 0)),
+        "com_uce": int((base["UCE_CLASSE"] == "COM_UCE").sum()),
         "qtde": _total(base[COLUNA_UCE_QTDE]),
-        "horas": _total(base[COLUNA_UCE_HORAS]),
-        "creditos": _total(base[COLUNA_UCE_CREDITOS]),
-        "media_horas": formatar_horas(round(com[COLUNA_UCE_HORAS].fillna(0).mean())) if len(com) else "—",
     }
 
 

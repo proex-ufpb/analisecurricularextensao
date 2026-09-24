@@ -222,11 +222,11 @@ def test_base_das_analises_so_tem_cursos_com_percentual_maior_que_zero():
 
 
 def test_uce_da_base_real():
-    resumo = resumo_uce(base_extensao())
-    assert resumo["total"] == 42
-    assert resumo["com_uce"] + resumo["sem_uce"] + resumo["sem_info"] == 42
-    assert (resumo["com_uce"], resumo["sem_uce"], resumo["sem_info"]) == (23, 3, 16)
-    assert (resumo["qtde"], resumo["horas"], resumo["creditos"]) == ("70", "4.095", "273")
+    base = base_extensao()
+    resumo = resumo_uce(base)
+    assert (resumo["total"], resumo["com_uce"], resumo["qtde"]) == (42, 23, "70")
+    classes = com_uce(base)["UCE_CLASSE"].value_counts().to_dict()
+    assert classes == {"COM_UCE": 23, "SEM_INFO": 16, "SEM_UCE": 3}
 
 
 def test_uce_por_centro_preserva_totais():
