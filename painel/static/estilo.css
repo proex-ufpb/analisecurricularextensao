@@ -82,6 +82,11 @@ table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
 th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--borda); vertical-align: top; }
 thead th { position: sticky; top: 0; background: #eceefa; color: var(--azul); font-weight: 600; white-space: nowrap; }
 th[scope="row"] { font-weight: 600; }
+th.ordenavel { cursor: pointer; user-select: none; }
+th.ordenavel:hover { background: #e2e5f7; }
+th.ordenavel::after { content: " ↕"; color: #9a9dc4; font-size: 0.8em; }
+th[aria-sort="ascending"]::after { content: " ▲"; color: var(--azul); }
+th[aria-sort="descending"]::after { content: " ▼"; color: var(--azul); }
 .num { text-align: right; font-variant-numeric: tabular-nums; }
 tbody tr:hover { background: #f7f8fd; }
 tr.inativo td { color: var(--texto-2); font-style: italic; }
