@@ -4,9 +4,3 @@
     <img class="logo-proex" src="{{ raiz }}logo-proex.png" alt="PROEX — Pró-Reitoria de Extensão/UFPB">
   </div>
 </header>
-<nav class="menu-topo" aria-label="Menu principal">
-  <div class="menu-topo-interno">
-    <a href="{{ raiz }}index.html"{% if pagina_atual == "painel" %} class="atual" aria-current="page"{% endif %}>Painel</a>
-    <a class="botao-equipe{% if pagina_atual == "equipe" %} atual{% endif %}" href="{{ raiz }}equipe.html"{% if pagina_atual == "equipe" %} aria-current="page"{% endif %}>Relatório (Equipe PROEX)</a>
-  </div>
-</nav>

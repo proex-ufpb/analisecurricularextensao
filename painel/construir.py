@@ -269,7 +269,6 @@ def _renderizar(ambiente, cursos, todos_centros, centro, raiz, atualizado_em):
 
     return ambiente.get_template("index.html.j2").render(
         raiz=raiz,
-        pagina_atual="painel",
         centro_atual=centro,
         titulo_pagina="Análise Curricular — Inserção Curricular da Extensão | PROEX/UFPB"
         if centro is None
@@ -340,7 +339,7 @@ def construir(csv=CSV_PADRAO, saida=SAIDA):
         destino.write_text(html, encoding="utf-8")
     (saida / "equipe.html").write_text(
         ambiente.get_template("equipe.html.j2").render(
-            raiz="", pagina_atual="equipe", url_relatorio=URL_ENVIO_RELATORIO, contato=CONTATO, equipe=EQUIPE
+            raiz="", url_relatorio=URL_ENVIO_RELATORIO, contato=CONTATO, equipe=EQUIPE
         ),
         encoding="utf-8",
     )

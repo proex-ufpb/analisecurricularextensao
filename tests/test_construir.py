@@ -143,13 +143,20 @@ def test_pagina_da_equipe_mostra_botao_com_link_quando_ha_endereco(tmp_path, mon
     assert 'rel="noopener"' in html and "Envio em configuração" not in html
 
 
-def test_menu_do_topo_leva_a_pagina_da_equipe_em_todas_as_paginas(site):
-    paginas = [site / "index.html", site / "equipe.html"] + sorted((site / "centro").glob("*.html"))
+def test_link_discreto_da_equipe_fica_no_rodape_e_nao_no_topo(site):
+    paginas = [site / "index.html"] + sorted((site / "centro").glob("*.html"))
     for pagina in paginas:
         html = pagina.read_text(encoding="utf-8")
         esperado = "../equipe.html" if pagina.parent.name == "centro" else "equipe.html"
-        assert f'href="{esperado}"' in html and "Relatório (Equipe PROEX)" in html, pagina.name
-    assert 'aria-current="page">Relatório (Equipe PROEX)' in (site / "equipe.html").read_text(encoding="utf-8")
+        rodape = html[html.index('<footer class="rodape">'):]
+        assert f'<a href="{esperado}">Área da equipe</a>' in rodape, pagina.name
+        assert 'href="' + esperado + '"' not in html[: html.index('<footer class="rodape">')], pagina.name
+        assert "menu-topo" not in html and "botao-equipe" not in html, pagina.name
+
+
+def test_pagina_da_equipe_tem_voltar_ao_painel(site):
+    html = (site / "equipe.html").read_text(encoding="utf-8")
+    assert '<a href="index.html">← Voltar ao painel</a>' in html
 
 
 def test_paginas_publicas_nao_expoem_o_e_mail_da_conta_autorizada(site):

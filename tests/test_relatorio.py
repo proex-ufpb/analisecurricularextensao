@@ -86,4 +86,4 @@ def test_relatorio_nao_e_gerado_dentro_do_site(tmp_path):
     site = tmp_path / "site"
     construir(csv=FIXTURE, saida=site)
     assert not list(site.rglob("relatorio*"))
-    assert "Relatório (Equipe PROEX)" in (site / "index.html").read_text(encoding="utf-8")
+    assert "Área da equipe" in (site / "index.html").read_text(encoding="utf-8")
