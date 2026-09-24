@@ -210,7 +210,7 @@ def grafico_uce_por_centro(tabela):
         font=dict(family=FONTE, size=13, color="#15163A"),
         separators=",.",
         showlegend=False,
-        xaxis=dict(title="Quantidade de UCEs", gridcolor="#E6E8F2", zeroline=False, rangemode="tozero"),
+        xaxis=dict(title="Quantidade de UCE", gridcolor="#E6E8F2", zeroline=False, rangemode="tozero"),
         yaxis=dict(autorange="reversed", automargin=True, title=""),
         hoverlabel=dict(font=dict(family=FONTE)),
     )

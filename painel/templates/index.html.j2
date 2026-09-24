@@ -240,15 +240,15 @@
     <div class="cartoes">
       <div class="cartao cartao-total">
         <span class="numero">{{ uce.com_uce }}</span>
-        <span class="rotulo">de {{ uce.total }} cursos com nova Resolução publicada criaram UCEs</span>
+        <span class="rotulo">de {{ uce.total }} cursos com nova Resolução publicada criaram UCE</span>
       </div>
       <div class="cartao">
-        <span class="rotulo"><i class="marca" style="background: {{ cor_uce }}"></i>UCEs criadas</span>
+        <span class="rotulo"><i class="marca" style="background: {{ cor_uce }}"></i>UCE criadas</span>
         <span class="numero">{{ uce.qtde }}</span>
       </div>
     </div>
 
-    <h3>UCEs por Centro</h3>
+    <h3>UCE por Centro</h3>
     <div class="cartao-grande">
       {{ grafico_uce|safe }}
       <details class="tabela-dados">
@@ -276,7 +276,7 @@
             <thead>
               <tr>
                 <th scope="col">Centro</th><th scope="col">Curso</th><th scope="col">Código e-MEC</th>
-                <th scope="col" class="num">UCEs</th><th scope="col" class="num">Carga horária (h)</th>
+                <th scope="col" class="num">UCE</th><th scope="col" class="num">Carga horária (h)</th>
                 <th scope="col" class="num">Créditos</th><th scope="col">Situação</th>
               </tr>
             </thead>

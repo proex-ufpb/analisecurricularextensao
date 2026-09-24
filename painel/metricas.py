@@ -331,7 +331,7 @@ def _formatar_uce(valor):
 
 
 def linhas_uce(base):
-    """Um curso por linha, do que tem mais UCEs para o que tem menos."""
+    """Um curso por linha, do que tem mais UCE para o que tem menos."""
     base = com_uce(base)
     base = base.assign(_qtde=base[COLUNA_UCE_QTDE].fillna(0))
     ordenados = base.sort_values(["_qtde", "CENTRO", "CURSO"], ascending=[False, True, True], kind="stable")
