@@ -34,9 +34,10 @@ a { color: var(--azul); }
 .logo-ufpb { height: 64px; width: auto; }
 .logo-proex { height: 56px; width: auto; }
 
-.voltar { margin: 18px 0 0; font-size: 0.9rem; }
+.voltar { margin: 6px 0 0; font-size: 0.9rem; }
+.voltar a { display: inline-block; padding: 12px 0; }
 .rodape-base { max-width: 1120px; margin: 0 auto; padding: 0 16px 14px; text-align: right; font-size: 0.75rem; }
-.rodape-base a { color: #a9acdf; text-decoration: none; }
+.rodape-base a { color: #a9acdf; text-decoration: none; display: inline-block; padding: 14px 8px; }
 .rodape-base a:hover { color: #ffffff; text-decoration: underline; }
 .envio ol { margin: 0 0 18px; padding-left: 20px; color: var(--texto-2); }
 .botao-principal { display: inline-block; background: var(--azul); color: #fff; text-decoration: none; font-weight: 600; padding: 12px 22px; border-radius: 10px; }
@@ -76,7 +77,7 @@ h3 { margin: 28px 0 10px; font-size: 1.05rem; color: var(--texto); font-weight: 
 .cartao-grande { background: var(--superficie); border: 1px solid var(--borda); border-radius: var(--raio); padding: 16px; }
 
 .tabela-dados { margin-top: 12px; }
-.tabela-dados summary { cursor: pointer; color: var(--azul); font-weight: 600; }
+.tabela-dados summary { cursor: pointer; color: var(--azul); font-weight: 600; min-height: 44px; display: flex; align-items: center; }
 
 .filtros { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
 .filtros label { display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; font-weight: 500; color: var(--texto-2); }

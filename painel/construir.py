@@ -190,7 +190,7 @@ def grafico_exigencia_oferta(tabela):
         separators=",.",
         legend=dict(orientation="v", yanchor="top", y=1, xanchor="right", x=1, title_text="", traceorder="normal",
                     bgcolor="rgba(255,255,255,0.9)", bordercolor="#DDE0EE", borderwidth=1),
-        xaxis=dict(title="Centro", type="category", gridcolor="#E6E8F2"),
+        xaxis=dict(title="Centro", type="category", gridcolor="#E6E8F2", tickangle=-45, tickfont=dict(size=11)),
         yaxis=dict(ticksuffix="%", range=[0, 26], dtick=5, gridcolor="#E6E8F2",
                    zeroline=False),
         hoverlabel=dict(font=dict(family=FONTE)),
