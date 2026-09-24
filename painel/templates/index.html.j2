@@ -126,6 +126,75 @@
     {% endif %}
   </section>
 
+  <section aria-labelledby="t-ppc">
+    <h2 id="t-ppc">Modificação curricular: PPC novo em relação ao PPC antigo</h2>
+    {% if n_ppc %}
+    <div class="cartoes">
+      <div class="cartao cartao-total">
+        <span class="numero">{{ n_ppc }}</span>
+        <span class="rotulo">de {{ n_ativos }} cursos ativos com modificação curricular informada</span>
+      </div>
+      {% for m in resumo_modificacao %}
+      <div class="cartao">
+        <span class="rotulo"><i class="marca" style="background: {{ cores_modificacao[m.chave] }}"></i>{{ m.rotulo }}</span>
+        <span class="numero">{{ m.total }}</span>
+        <span class="percentual">{{ "%.1f"|format(m.percentual)|replace(".", ",") }}% dos cursos</span>
+      </div>
+      {% endfor %}
+    </div>
+
+    <h3>Modificação curricular por Centro</h3>
+    <div class="cartao-grande">
+      {{ grafico_modificacao|safe }}
+      <details class="tabela-dados">
+        <summary>Ver os dados do gráfico em tabela</summary>
+        <div class="filtros filtros-duplos">
+          <label>Buscar curso
+            <input type="search" id="m-busca" placeholder="Nome do curso ou código e-MEC">
+          </label>
+          <label>Centro
+            <select id="m-centro">
+              <option value="">Todos</option>
+              {% for c in centros %}<option>{{ c }}</option>{% endfor %}
+            </select>
+          </label>
+          <label>Modificação
+            <select id="m-modificacao">
+              <option value="">Todas</option>
+              {% for k in modificacoes %}<option value="{{ k }}">{{ rotulos_modificacao[k] }}</option>{% endfor %}
+            </select>
+          </label>
+        </div>
+        <p class="contagem" aria-live="polite"><span id="contagem-ppc">{{ linhas_ppc|length }}</span> de {{ linhas_ppc|length }} cursos</p>
+        <div class="rolagem rolagem-alta">
+          <table id="tabela-ppc">
+            <thead>
+              <tr>
+                <th scope="col">Centro</th><th scope="col">Curso</th><th scope="col">Código e-MEC</th>
+                <th scope="col">Modificação</th><th scope="col">PPC antigo</th><th scope="col">PPC novo</th>
+                <th scope="col" class="num">CH antiga (h)</th><th scope="col" class="num">CH nova (h)</th>
+                <th scope="col" class="num">Variação (h)</th><th scope="col" class="num">Variação (%)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for c in linhas_ppc %}
+              <tr data-centro="{{ c.centro }}" data-modificacao="{{ c.modificacao }}" data-busca="{{ (c.curso ~ ' ' ~ c.emec)|lower }}">
+                <td>{{ c.centro }}</td><td>{{ c.curso }}</td><td>{{ c.emec }}</td>
+                <td><span class="selo"><i class="marca" style="background: {{ cores_modificacao[c.modificacao] }}"></i>{{ c.modificacao_rotulo }}</span></td>
+                <td>{{ c.ppc_antigo }}</td><td>{{ c.ppc_novo }}</td>
+                <td class="num">{{ c.ch_antiga }}</td><td class="num">{{ c.ch_nova }}</td>
+                <td class="num">{{ c.variacao }}</td><td class="num">{{ c.variacao_pct }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </div>
+    {% else %}<p class="nota">Nenhum curso deste Centro tem modificação curricular informada.</p>
+    {% endif %}
+  </section>
+
   <section aria-labelledby="t-oferta">
     <h2 id="t-oferta">Percentual dos componentes com extensão inseridos no Currículo</h2>
     {% if n_extensao %}

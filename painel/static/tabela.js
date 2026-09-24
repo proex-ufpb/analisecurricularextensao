@@ -91,6 +91,11 @@ document.addEventListener("DOMContentLoaded", () => {
     campos: { busca: "i-busca", centro: "i-centro", periodo: "i-periodo" },
   });
   ligarFiltro({
+    tabela: "#tabela-ppc",
+    contagem: "contagem-ppc",
+    campos: { busca: "m-busca", centro: "m-centro", modificacao: "m-modificacao" },
+  });
+  ligarFiltro({
     tabela: "#tabela-oferta",
     contagem: "contagem-oferta",
     campos: { busca: "o-busca", centro: "o-centro" },

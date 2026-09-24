@@ -389,3 +389,73 @@ def linhas_periodo(ativos):
         }
         for _, c in ordenados.iterrows()
     ]
+
+
+COLUNA_MODIFICACAO = "M.CURRICULAR"
+MODIFICACOES = ["AUMENTO", "MANUTENÇÃO", "REDUÇÃO", "NOVO"]
+ROTULOS_MODIFICACAO = {"AUMENTO": "Aumento", "MANUTENÇÃO": "Manutenção", "REDUÇÃO": "Redução", "NOVO": "Novo"}
+COLUNA_CH_ANTIGA = "CH_MÍNINA_ANTIGO"
+COLUNA_CH_NOVA = "CH_MÍNINA_NOVO"
+
+
+def base_ppc(ativos):
+    """Cursos ativos com a modificação curricular (PPC novo x antigo) classificada na planilha."""
+    return ativos[ativos[COLUNA_MODIFICACAO].isin(MODIFICACOES)]
+
+
+def resumo_modificacao(base):
+    contagem = base[COLUNA_MODIFICACAO].value_counts()
+    total = len(base)
+    return [
+        {
+            "chave": chave,
+            "rotulo": ROTULOS_MODIFICACAO[chave],
+            "total": int(contagem.get(chave, 0)),
+            "percentual": (contagem.get(chave, 0) / total * 100) if total else 0.0,
+        }
+        for chave in MODIFICACOES
+    ]
+
+
+def modificacao_por_centro(base):
+    tabela = pd.crosstab(base["CENTRO"], base[COLUNA_MODIFICACAO]).reindex(columns=MODIFICACOES, fill_value=0)
+    tabela["TOTAL"] = tabela.sum(axis=1)
+    tabela["_centro"] = tabela.index
+    return tabela.sort_values(["TOTAL", "_centro"], ascending=[False, True]).drop(columns="_centro")
+
+
+def formatar_variacao(valor, sufixo=""):
+    if pd.isna(valor):
+        return "—"
+    if abs(valor) < 0.005:
+        return "0" + sufixo
+    if float(valor).is_integer():
+        texto = f"{abs(int(valor)):,}".replace(",", ".")
+    else:
+        texto = f"{abs(valor):,.1f}".replace(",", "_").replace(".", ",").replace("_", ".")
+    return ("+" if valor > 0 else "-") + texto + sufixo
+
+
+def linhas_ppc(base):
+    """Um curso por linha, com a carga horária dos PPCs antigo e novo e a variação entre eles."""
+    ordenados = base.sort_values(["CENTRO", "CURSO"])
+    linhas = []
+    for _, c in ordenados.iterrows():
+        antiga, nova = c[COLUNA_CH_ANTIGA], c[COLUNA_CH_NOVA]
+        tem_ambas = not (pd.isna(antiga) or pd.isna(nova))
+        variacao = (nova - antiga) if tem_ambas else float("nan")
+        percentual = (variacao / antiga * 100) if tem_ambas and antiga else float("nan")
+        linhas.append({
+            "centro": c["CENTRO"],
+            "curso": formatar_nome(c["CURSO"]),
+            "emec": c["CÓDIGO E-MEC"] or "Não informado",
+            "modificacao": c[COLUNA_MODIFICACAO],
+            "modificacao_rotulo": ROTULOS_MODIFICACAO[c[COLUNA_MODIFICACAO]],
+            "ppc_antigo": c["PPC_ANTIGO_PERIODO"] or "—",
+            "ppc_novo": c["PPC_NOVO_PERIODO"] or "—",
+            "ch_antiga": formatar_horas(antiga),
+            "ch_nova": formatar_horas(nova),
+            "variacao": formatar_variacao(variacao),
+            "variacao_pct": formatar_variacao(percentual, "%"),
+        })
+    return linhas

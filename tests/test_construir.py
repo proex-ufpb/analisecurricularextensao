@@ -179,3 +179,22 @@ def test_textos_da_secao_de_implantacao_por_semestre(site):
     assert eixo_x in html
     tabela = html[html.index('id="tabela-periodo"'):html.index("</table>", html.index('id="tabela-periodo"'))]
     assert '<th scope="col">Ano.Semestre</th>' in tabela and "Período do PPC novo" not in html
+
+
+def linhas_da_tabela(html, tabela_id):
+    if f'id="{tabela_id}"' not in html:
+        return 0
+    inicio = html.index(f'id="{tabela_id}"')
+    return html[inicio:html.index("</table>", inicio)].count("<tr data-centro=")
+
+
+def test_modificacao_curricular_das_paginas_por_centro_soma_a_da_pagina_geral(site):
+    geral = linhas_da_tabela((site / "index.html").read_text(encoding="utf-8"), "tabela-ppc")
+    soma = sum(linhas_da_tabela(p.read_text(encoding="utf-8"), "tabela-ppc") for p in (site / "centro").glob("*.html"))
+    assert geral == soma == 36
+
+
+def test_centro_sem_modificacao_curricular_informada_mostra_aviso(site):
+    html = (site / "centro" / "ccj.html").read_text(encoding="utf-8")
+    assert "Nenhum curso deste Centro tem modificação curricular informada." in html
+    assert 'id="tabela-ppc"' not in html

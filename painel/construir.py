@@ -10,11 +10,14 @@ from plotly.offline import get_plotlyjs
 from painel.dados import CSV_PADRAO, PRIORIDADE_STATUS, carregar_linhas, cursos_ativos, cursos_unicos
 from painel.metricas import (
     COMPONENTES,
+    MODIFICACOES,
     LIMITE_MAXIMO,
     LIMITE_MINIMO,
     ROTULOS_COMPONENTES,
+    ROTULOS_MODIFICACAO,
     ROTULOS_UCE,
     ROTULOS_STATUS,
+    base_ppc,
     com_meta,
     componentes_por_centro,
     cursos_com_extensao,
@@ -22,11 +25,14 @@ from painel.metricas import (
     implantados_por_periodo,
     linhas_oferta,
     linhas_periodo,
+    linhas_ppc,
     linhas_uce,
     linhas_tabela,
+    modificacao_por_centro,
     oferta_por_centro,
     uce_por_centro,
     resumo_componentes,
+    resumo_modificacao,
     resumo_oferta,
     resumo_uce,
     resumo_status,
@@ -36,8 +42,10 @@ from painel.tema import (
     AZUL_PROEX,
     CONTATO,
     COR_TEXTO_COMPONENTES,
+    COR_TEXTO_MODIFICACAO,
     COR_TEXTO_NA_BARRA,
     CORES_COMPONENTES,
+    CORES_MODIFICACAO,
     COR_UCE,
     CORES_OFERTA,
     CORES_STATUS,
@@ -96,6 +104,12 @@ def _barras_por_centro(tabela, categorias, rotulos, cores, cores_texto, titulo_x
 def grafico_status_por_centro(tabela):
     return _barras_por_centro(
         tabela, PRIORIDADE_STATUS, ROTULOS_STATUS, CORES_STATUS, COR_TEXTO_NA_BARRA, "Cursos ativos"
+    )
+
+
+def grafico_modificacao_por_centro(tabela):
+    return _barras_por_centro(
+        tabela, MODIFICACOES, ROTULOS_MODIFICACAO, CORES_MODIFICACAO, COR_TEXTO_MODIFICACAO, "Cursos ativos"
     )
 
 
@@ -266,6 +280,7 @@ def _renderizar(ambiente, cursos, todos_centros, centro, raiz, atualizado_em):
     resumo_comp, total_horas = resumo_componentes(base_extensao)
     periodos, sem_periodo = implantados_por_periodo(ativos)
     tem_extensao = len(base_extensao) > 0
+    base_modificacao = base_ppc(ativos)
 
     return ambiente.get_template("index.html.j2").render(
         raiz=raiz,
@@ -298,6 +313,13 @@ def _renderizar(ambiente, cursos, todos_centros, centro, raiz, atualizado_em):
         grafico_componentes=grafico_componentes_por_centro(componentes_por_centro(base_extensao)) if tem_extensao else "",
         linhas_componentes=linhas_componentes(base_extensao),
         oferta=resumo_oferta(base_extensao),
+        n_ppc=len(base_modificacao),
+        modificacoes=MODIFICACOES,
+        rotulos_modificacao=ROTULOS_MODIFICACAO,
+        cores_modificacao=CORES_MODIFICACAO,
+        resumo_modificacao=resumo_modificacao(base_modificacao),
+        grafico_modificacao=grafico_modificacao_por_centro(modificacao_por_centro(base_modificacao)) if len(base_modificacao) else "",
+        linhas_ppc=linhas_ppc(base_modificacao),
         grafico_periodo=grafico_implantados_por_periodo(periodos) if periodos else "",
         periodos=periodos,
         sem_periodo=sem_periodo,
