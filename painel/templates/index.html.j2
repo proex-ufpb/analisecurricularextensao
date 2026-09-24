@@ -24,7 +24,7 @@
 <main id="conteudo">
   <section class="abertura">
     <h1>Análise Curricular<span>Inserção curricular da extensão</span></h1>
-    <p class="lead">Situação de implantação da inserção curricular da extensão nos cursos de graduação da UFPB. Dados atualizados em {{ atualizado_em }}.</p>
+    <p class="lead">Situação da inserção curricular da extensão nos cursos de graduação da UFPB. Dados atualizados em {{ atualizado_em }}</p>
   </section>
 
   <section aria-labelledby="t-resumo">
@@ -42,7 +42,7 @@
       </div>
       {% endfor %}
     </div>
-    <p class="nota">Cada curso é contado uma única vez, pelo código e-MEC: cursos com mais de um turno ou oferta contam como um só. Quando as ofertas de um mesmo curso estão em situações diferentes, prevalece a mais avançada (Implantado &gt; Aguardando implantação &gt; Em andamento &gt; Sem processo). {{ n_fora }} curso(s) fora de atividade aparecem na tabela, mas não entram nos totais e percentuais.</p>
+    <p class="nota">Cada curso é contado uma única vez, pelo código e-MEC: cursos com mais de um turno ou oferta contam como um só. Os cursos com status em extinção não são computados nos totais e percentuais.</p>
   </section>
 
   <section aria-labelledby="t-centros">
