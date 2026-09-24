@@ -33,7 +33,7 @@
     <div class="cartoes">
       <div class="cartao cartao-total">
         <span class="numero">{{ n_ativos }}</span>
-        <span class="rotulo">cursos ativos</span>
+        <span class="rotulo">cursos ativos<span class="secundario">{{ n_fora }} cursos em extinção</span></span>
       </div>
       {% for s in status %}
       <div class="cartao">
@@ -43,11 +43,11 @@
       </div>
       {% endfor %}
     </div>
-    <p class="nota">Cada curso é contado uma única vez, pelo código e-MEC: cursos com mais de um turno ou oferta contam como um só. Os cursos com status em extinção não são computados nos totais e percentuais.</p>
+    <p class="nota">Cada curso é contado uma única vez, pelo código e-MEC: cursos com mais de um turno contam como um só.<br>Os cursos com status em extinção não são computados nos totais e percentuais.</p>
   </section>
 
   <section aria-labelledby="t-centros">
-    <h2 id="t-centros">Situação de implantação por centro</h2>
+    <h2 id="t-centros">Situação de implantação por Centro</h2>
     <div class="cartao-grande">
       <script src="plotly.min.js"></script>
       {{ grafico|safe }}
@@ -70,7 +70,7 @@
   </section>
 
   <section aria-labelledby="t-periodo">
-    <h2 id="t-periodo">Cursos implantados por período do PPC novo</h2>
+    <h2 id="t-periodo">Quantidade de cursos com inserção curricular da extensão por período</h2>
     <div class="cartao-grande">
       {{ grafico_periodo|safe }}
       {% if sem_periodo %}<p class="nota">{{ sem_periodo }} curso(s) implantado(s) sem período válido no PPC novo (não aparece(m) no gráfico).</p>{% endif %}
@@ -113,10 +113,10 @@
   </section>
 
   <section aria-labelledby="t-oferta">
-    <h2 id="t-oferta">Extensão ofertada pelo curso</h2>
+    <h2 id="t-oferta">Percentual dos componentes com extensão inseridos no Currículo</h2>
     {% if oferta.menores %}<p class="nota">Atenção: {{ oferta.menores }} curso(s) aparecem com oferta menor que a exigência; vale conferir na planilha.</p>{% endif %}
 
-    <h3>Exigência e oferta por centro</h3>
+    <h3>Média da exigência de integralização pelo aluno e da oferta de carga horária de extensão por Centro</h3>
     <div class="cartao-grande">
       {{ grafico_oferta|safe }}
       <details class="tabela-dados">
@@ -138,7 +138,7 @@
             <thead>
               <tr>
                 <th scope="col">Centro</th><th scope="col">Curso</th><th scope="col">Código e-MEC</th>
-                <th scope="col" class="num">A integralizar (h)</th><th scope="col" class="num">% a integralizar</th>
+                <th scope="col" class="num">Carga horária do curso (h)</th><th scope="col" class="num">A integralizar (h)</th><th scope="col" class="num">% a integralizar</th>
                 <th scope="col" class="num">Ofertado (h)</th><th scope="col" class="num">% ofertado</th><th scope="col" class="num">Margem (p.p.)</th>
               </tr>
             </thead>
@@ -146,7 +146,7 @@
               {% for c in linhas_oferta %}
               <tr data-centro="{{ c.centro }}" data-busca="{{ (c.curso ~ ' ' ~ c.emec)|lower }}">
                 <td>{{ c.centro }}</td><td>{{ c.curso }}</td><td>{{ c.emec }}</td>
-                <td class="num">{{ c.horas_exigidas }}</td><td class="num">{{ c.pct_exigido }}</td>
+                <td class="num">{{ c.horas_curso }}</td><td class="num">{{ c.horas_exigidas }}</td><td class="num">{{ c.pct_exigido }}</td>
                 <td class="num">{{ c.horas_ofertadas }}</td><td class="num">{{ c.pct_ofertado }}</td><td class="num">{{ c.margem }}</td>
               </tr>
               {% endfor %}
@@ -158,7 +158,7 @@
   </section>
 
   <section aria-labelledby="t-comp">
-    <h2 id="t-comp">Componentes da extensão ofertada</h2>
+    <h2 id="t-comp">Distribuição da carga horária de extensão por componentes</h2>
     <div class="cartoes">
       <div class="cartao cartao-total">
         <span class="numero">{{ total_horas }}</span>
@@ -173,7 +173,7 @@
       {% endfor %}
     </div>
 
-    <h3>Distribuição por centro</h3>
+    <h3>Distribuição por Centro</h3>
     <div class="cartao-grande">
       {{ grafico_componentes|safe }}
       <details class="tabela-dados">
@@ -219,7 +219,7 @@
     <div class="cartoes">
       <div class="cartao cartao-total">
         <span class="numero">{{ uce.com_uce }}</span>
-        <span class="rotulo">de {{ uce.total }} cursos com percentual de extensão criaram UCEs</span>
+        <span class="rotulo">de {{ uce.total }} cursos com nova Resolução publicada criaram UCEs</span>
       </div>
       <div class="cartao">
         <span class="rotulo"><i class="marca" style="background: {{ cor_uce }}"></i>UCEs criadas</span>
@@ -227,7 +227,7 @@
       </div>
     </div>
 
-    <h3>UCEs por centro</h3>
+    <h3>UCEs por Centro</h3>
     <div class="cartao-grande">
       {{ grafico_uce|safe }}
       <details class="tabela-dados">
@@ -240,6 +240,12 @@
             <select id="u-centro">
               <option value="">Todos</option>
               {% for c in centros %}<option>{{ c }}</option>{% endfor %}
+            </select>
+          </label>
+          <label>Situação
+            <select id="u-situacao">
+              <option value="">Todas</option>
+              {% for k, r in rotulos_uce.items() %}<option value="{{ k }}">{{ r }}</option>{% endfor %}
             </select>
           </label>
         </div>
@@ -255,7 +261,7 @@
             </thead>
             <tbody>
               {% for c in linhas_uce %}
-              <tr data-centro="{{ c.centro }}" data-busca="{{ (c.curso ~ ' ' ~ c.emec)|lower }}">
+              <tr data-centro="{{ c.centro }}" data-situacao="{{ c.classe }}" data-busca="{{ (c.curso ~ ' ' ~ c.emec)|lower }}">
                 <td>{{ c.centro }}</td><td>{{ c.curso }}</td><td>{{ c.emec }}</td>
                 <td class="num">{{ c.qtde }}</td><td class="num">{{ c.horas }}</td><td class="num">{{ c.creditos }}</td><td>{{ c.situacao }}</td>
               </tr>
@@ -295,7 +301,7 @@
         </label>
       </div>
       <p class="contagem" aria-live="polite"><span id="contagem">{{ n_cursos }}</span> de {{ n_cursos }} cursos</p>
-      <div class="rolagem">
+      <div class="rolagem rolagem-alta">
         <table id="tabela-cursos">
           <thead>
             <tr>

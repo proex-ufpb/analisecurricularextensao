@@ -147,6 +147,9 @@ def test_linhas_oferta_ordenadas_pela_maior_margem():
     assert len(linhas) == 42
     assert linhas[0]["curso"] == "Hotelaria"
     assert (linhas[0]["pct_exigido"], linhas[0]["pct_ofertado"]) == ("12,50%", "28,75%")
+    assert linhas[0]["horas_curso"] == "—"
+    biotec = next(l for l in linhas if l["curso"] == "Biotecnologia")
+    assert biotec["horas_curso"] == "3.570" and biotec["horas_exigidas"] == "375"
     margens = [float(l["margem"].replace("+", "").replace(",", ".")) for l in linhas]
     assert margens == sorted(margens, reverse=True)
 
@@ -203,6 +206,7 @@ def test_classificacao_de_uce():
 def test_linhas_uce_campo_vazio_conta_como_sem_uce():
     linhas = linhas_uce(frame_uce((float("nan"), float("nan")), (0, 0.0), (4, 60.0)))
     assert [l["situacao"] for l in linhas] == ["Com UCE", "Sem UCE", "Sem UCE"]
+    assert [l["classe"] for l in linhas] == ["COM_UCE", "SEM_UCE", "SEM_UCE"]
     assert (linhas[0]["qtde"], linhas[0]["horas"], linhas[0]["creditos"]) == ("4", "60", "4")
     assert all((l["qtde"], l["horas"], l["creditos"]) == ("0", "0", "0") for l in linhas[1:])
 

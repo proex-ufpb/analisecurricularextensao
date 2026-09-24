@@ -213,6 +213,7 @@ def linhas_componentes(base):
 
 COLUNA_OFERTA = "%CH_EXT_DISPONÍVEL"
 COLUNA_HORAS_EXIGIDAS = "CH_INTEGRALIZADA_EXTENSAO"
+COLUNA_HORAS_CURSO = "CH_MÍNINA_NOVO"
 
 
 def _margem_pp(base):
@@ -263,6 +264,7 @@ def linhas_oferta(base):
             "centro": c["CENTRO"],
             "curso": formatar_nome(c["CURSO"]),
             "emec": c["CÓDIGO E-MEC"] or "Não informado",
+            "horas_curso": formatar_horas(c[COLUNA_HORAS_CURSO]),
             "horas_exigidas": formatar_horas(c[COLUNA_HORAS_EXIGIDAS]),
             "pct_exigido": formatar_percentual(c[COLUNA_PERCENTUAL]),
             "horas_ofertadas": formatar_horas(c[COLUNA_TOTAL_EXT]),
@@ -342,6 +344,7 @@ def linhas_uce(base):
             "qtde": _formatar_uce(c[COLUNA_UCE_QTDE]),
             "horas": _formatar_uce(c[COLUNA_UCE_HORAS]),
             "creditos": _formatar_uce(c[COLUNA_UCE_CREDITOS]),
+            "classe": c["UCE_CLASSE"],
             "situacao": ROTULOS_UCE[c["UCE_CLASSE"]],
         })
     return linhas

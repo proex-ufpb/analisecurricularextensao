@@ -50,7 +50,8 @@ h2 { margin: 36px 0 12px; font-size: 1.3rem; color: var(--azul); font-weight: 60
 .cartao .numero { font-size: 2.2rem; font-weight: 700; line-height: 1.1; grid-row: 2; }
 .cartao .percentual { color: var(--texto-2); font-size: 0.9rem; grid-row: 3; }
 .cartao-total { background: var(--azul); border-color: var(--azul); color: #fff; }
-.cartao-total .rotulo { color: #dfe0ff; grid-row: 3; }
+.cartao-total .rotulo { color: #dfe0ff; grid-row: 3; display: block; }
+.cartao-total .secundario { display: block; margin-top: 2px; font-size: 0.85rem; color: #c3c5f5; }
 .marca { display: inline-block; width: 12px; height: 12px; border-radius: 3px; flex: none; }
 
 h3 { margin: 28px 0 10px; font-size: 1.05rem; color: var(--texto); font-weight: 600; }

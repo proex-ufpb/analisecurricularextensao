@@ -39,7 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
   ligarFiltro({
     tabela: "#tabela-uce",
     contagem: "contagem-uce",
-    campos: { busca: "u-busca", centro: "u-centro" },
+    campos: { busca: "u-busca", centro: "u-centro", situacao: "u-situacao" },
   });
   ligarFiltro({
     tabela: "#tabela-componentes",

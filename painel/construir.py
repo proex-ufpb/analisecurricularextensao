@@ -12,6 +12,7 @@ from painel.metricas import (
     LIMITE_MAXIMO,
     LIMITE_MINIMO,
     ROTULOS_COMPONENTES,
+    ROTULOS_UCE,
     ROTULOS_STATUS,
     com_meta,
     componentes_por_centro,
@@ -71,7 +72,7 @@ def _barras_por_centro(tabela, categorias, rotulos, cores, cores_texto, titulo_x
             customdata=(valores / tabela["TOTAL"] * 100).round(0),
             hovertemplate=(
                 "<b>%{y}</b><br>" + rotulos[categoria]
-                + ": %{x} curso(s) (%{customdata:.0f}% do centro)<extra></extra>"
+                + ": %{x} curso(s) (%{customdata:.0f}% do Centro)<extra></extra>"
             ),
         )
     fig.update_layout(
@@ -114,7 +115,7 @@ def grafico_componentes_por_centro(tabela):
             customdata=horas,
             hovertemplate=(
                 "<b>%{y}</b><br>" + ROTULOS_COMPONENTES[chave]
-                + ": %{customdata:.0f} h (%{x:.0f}% da carga horária de extensão do centro)<extra></extra>"
+                + ": %{customdata:.0f} h (%{x:.0f}% da carga horária de extensão do Centro)<extra></extra>"
             ),
         )
     fig.update_layout(
@@ -125,7 +126,7 @@ def grafico_componentes_por_centro(tabela):
         plot_bgcolor="rgba(0,0,0,0)",
         font=dict(family=FONTE, size=13, color="#15163A"),
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0, title_text="", traceorder="normal"),
-        xaxis=dict(title="Participação na carga horária de extensão do centro", ticksuffix="%", range=[0, 100],
+        xaxis=dict(title="Participação na carga horária de extensão do Centro", ticksuffix="%", range=[0, 100],
                    gridcolor="#E6E8F2", zeroline=False),
         yaxis=dict(autorange="reversed", automargin=True, title=""),
         hoverlabel=dict(font=dict(family=FONTE)),
@@ -134,7 +135,7 @@ def grafico_componentes_por_centro(tabela):
 
 
 def grafico_exigencia_oferta(tabela):
-    """Média por centro do % que o aluno integraliza e do % que o curso oferta, com a faixa de 10% a 15%."""
+    """Média por Centro do % que o aluno integraliza e do % que o curso oferta, com a faixa de 10% a 15%."""
     centros = list(tabela.index)
     fig = go.Figure()
     fig.add_vrect(x0=LIMITE_MINIMO * 100, x1=LIMITE_MAXIMO * 100, fillcolor="#2E9E4F", opacity=0.12,
@@ -169,8 +170,9 @@ def grafico_exigencia_oferta(tabela):
         plot_bgcolor="rgba(0,0,0,0)",
         font=dict(family=FONTE, size=13, color="#15163A"),
         separators=",.",
-        legend=dict(orientation="h", yanchor="top", y=-0.1, xanchor="left", x=0, title_text="", traceorder="normal"),
-        xaxis=dict(title="Média dos cursos do centro", ticksuffix="%", range=[0, 32], dtick=5, gridcolor="#E6E8F2",
+        legend=dict(orientation="v", yanchor="top", y=1, xanchor="right", x=1, title_text="", traceorder="normal",
+                    bgcolor="rgba(255,255,255,0.9)", bordercolor="#DDE0EE", borderwidth=1),
+        xaxis=dict(title="Média dos cursos do Centro", ticksuffix="%", range=[0, 36], dtick=5, gridcolor="#E6E8F2",
                    zeroline=False),
         yaxis=dict(autorange="reversed", automargin=True, title=""),
         hoverlabel=dict(font=dict(family=FONTE)),
@@ -275,6 +277,7 @@ def construir(csv=CSV_PADRAO, saida=SAIDA):
         prioridade=PRIORIDADE_STATUS,
         componentes=COMPONENTES,
         rotulos_componentes=ROTULOS_COMPONENTES,
+        rotulos_uce=ROTULOS_UCE,
         cores_componentes=CORES_COMPONENTES,
         resumo_componentes=resumo_comp,
         total_horas=total_horas,
