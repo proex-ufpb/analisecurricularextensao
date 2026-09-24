@@ -34,6 +34,17 @@ a { color: var(--azul); }
 .logo-ufpb { height: 64px; width: auto; }
 .logo-proex { height: 56px; width: auto; }
 
+.menu-topo { background: #eceefa; border-bottom: 1px solid var(--borda); }
+.menu-topo-interno { max-width: 1120px; margin: 0 auto; padding: 8px 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
+.menu-topo a { color: var(--azul); text-decoration: none; font-weight: 500; padding: 4px 2px; }
+.menu-topo a.atual { font-weight: 700; border-bottom: 2px solid var(--azul); }
+.menu-topo a.botao-equipe { margin-left: auto; background: var(--azul); color: #fff; padding: 6px 14px; border-radius: 999px; font-weight: 600; border-bottom: 0; }
+.menu-topo a.botao-equipe:hover { background: #22236b; }
+.menu-topo a.botao-equipe.atual { outline: 2px solid var(--vermelho); outline-offset: 2px; }
+.envio ol { margin: 0 0 18px; padding-left: 20px; color: var(--texto-2); }
+.botao-principal { display: inline-block; background: var(--azul); color: #fff; text-decoration: none; font-weight: 600; padding: 12px 22px; border-radius: 10px; }
+a.botao-principal:hover { background: #22236b; }
+.botao-principal.desativado { background: #b9bdd6; color: #fff; cursor: not-allowed; }
 main { max-width: 1120px; margin: 0 auto; padding: 8px 16px 40px; }
 
 .abertura { padding: 28px 0 8px; }

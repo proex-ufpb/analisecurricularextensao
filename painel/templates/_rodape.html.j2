@@ -1,0 +1,16 @@
+<footer class="rodape">
+  <div class="rodape-interno">
+    <div>
+      <h2>Contato</h2>
+      <p><a href="mailto:{{ contato.email }}">{{ contato.email }}</a></p>
+      <p>Ramal: {{ contato.ramal }}</p>
+      <p class="fonte">Pró-Reitoria de Extensão — Universidade Federal da Paraíba</p>
+    </div>
+    <div>
+      <h2>Equipe</h2>
+      <ul>
+        {% for nome, cargo in equipe %}<li><strong>{{ nome }}</strong><span>{{ cargo }}</span></li>{% endfor %}
+      </ul>
+    </div>
+  </div>
+</footer>

@@ -16,12 +16,7 @@
 </head>
 <body>
 <a class="pular" href="#conteudo">Ir para o conteúdo</a>
-<header class="topo">
-  <div class="topo-interno">
-    <img class="logo-ufpb" src="{{ raiz }}logo-ufpb.svg" alt="Brasão da Universidade Federal da Paraíba">
-    <img class="logo-proex" src="{{ raiz }}logo-proex.png" alt="PROEX — Pró-Reitoria de Extensão/UFPB">
-  </div>
-</header>
+{% include "_cabecalho.html.j2" %}
 
 <main id="conteudo">
   <section class="abertura">
@@ -361,22 +356,6 @@
   </section>
 </main>
 
-<footer class="rodape">
-  <div class="rodape-interno">
-    <div>
-      <h2>Contato</h2>
-      <p><a href="mailto:{{ contato.email }}">{{ contato.email }}</a></p>
-      <p>Ramal: {{ contato.ramal }}</p>
-      <p class="fonte">Pró-Reitoria de Extensão — Universidade Federal da Paraíba</p>
-      {% if url_relatorio %}<p class="fonte"><a href="{{ url_relatorio }}" rel="noopener">Equipe PROEX: enviar relatório de ações prioritárias</a></p>{% endif %}
-    </div>
-    <div>
-      <h2>Equipe</h2>
-      <ul>
-        {% for nome, cargo in equipe %}<li><strong>{{ nome }}</strong><span>{{ cargo }}</span></li>{% endfor %}
-      </ul>
-    </div>
-  </div>
-</footer>
+{% include "_rodape.html.j2" %}
 </body>
 </html>

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Relatório (Equipe PROEX) | Análise Curricular | PROEX/UFPB</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="{{ raiz }}estilo.css">
+</head>
+<body>
+<a class="pular" href="#conteudo">Ir para o conteúdo</a>
+{% include "_cabecalho.html.j2" %}
+
+<main id="conteudo">
+  <section class="abertura">
+    <h1>Relatório<span>Equipe PROEX</span></h1>
+    <p class="lead">Envio por e-mail do Relatório de Ações Prioritárias da inserção curricular da extensão.</p>
+  </section>
+
+  <section aria-labelledby="t-envio">
+    <h2 id="t-envio">Como enviar o relatório</h2>
+    <div class="cartao-grande envio">
+      <ol>
+        <li>Clique no botão abaixo e entre com a conta Google autorizada da PROEX.</li>
+        <li>Na tela seguinte, confirme o envio.</li>
+        <li>O relatório é gerado com os dados mais recentes da planilha e chega por e-mail à equipe em alguns minutos.</li>
+      </ol>
+      {% if url_relatorio %}
+      <a class="botao-principal" href="{{ url_relatorio }}" target="_blank" rel="noopener">Entrar com o Google e enviar o relatório</a>
+      {% else %}
+      <span class="botao-principal desativado" role="note">Envio em configuração</span>
+      {% endif %}
+      <p class="nota">Acesso restrito: somente a conta autorizada consegue enviar. Qualquer outra conta verá "Acesso restrito". O relatório não é exibido no site: ele é enviado por e-mail.</p>
+    </div>
+  </section>
+</main>
+
+{% include "_rodape.html.j2" %}
+</body>
+</html>

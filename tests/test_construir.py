@@ -124,3 +124,32 @@ def test_todo_centro_da_base_tem_descricao_cadastrada():
 def test_titulo_da_pagina_do_centro_traz_a_descricao(site):
     html = (site / "centro" / "ccs.html").read_text(encoding="utf-8")
     assert "<title>CCS – Centro de Ciências da Saúde | Análise Curricular | PROEX/UFPB</title>" in html
+
+
+def test_pagina_da_equipe_existe_com_botao_desativado_sem_endereco(site):
+    html = (site / "equipe.html").read_text(encoding="utf-8")
+    assert 'name="robots" content="noindex"' in html
+    assert "Relatório" in html and "Equipe PROEX" in html
+    assert "Envio em configuração" in html and "botao-principal" in html
+
+
+def test_pagina_da_equipe_mostra_botao_com_link_quando_ha_endereco(tmp_path, monkeypatch):
+    monkeypatch.setattr("painel.construir.URL_ENVIO_RELATORIO", "https://script.google.com/macros/s/EXEMPLO/exec")
+    construir(csv=FIXTURE, saida=tmp_path)
+    html = (tmp_path / "equipe.html").read_text(encoding="utf-8")
+    assert 'href="https://script.google.com/macros/s/EXEMPLO/exec"' in html
+    assert 'rel="noopener"' in html and "Envio em configuração" not in html
+
+
+def test_menu_do_topo_leva_a_pagina_da_equipe_em_todas_as_paginas(site):
+    paginas = [site / "index.html", site / "equipe.html"] + sorted((site / "centro").glob("*.html"))
+    for pagina in paginas:
+        html = pagina.read_text(encoding="utf-8")
+        esperado = "../equipe.html" if pagina.parent.name == "centro" else "equipe.html"
+        assert f'href="{esperado}"' in html and "Relatório (Equipe PROEX)" in html, pagina.name
+    assert 'aria-current="page">Relatório (Equipe PROEX)' in (site / "equipe.html").read_text(encoding="utf-8")
+
+
+def test_paginas_publicas_nao_expoem_o_e_mail_da_conta_autorizada(site):
+    for pagina in [site / "equipe.html", site / "index.html"] + sorted((site / "centro").glob("*.html")):
+        assert "creditacaodaextensaoufpb" not in pagina.read_text(encoding="utf-8"), pagina.name
