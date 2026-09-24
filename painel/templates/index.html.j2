@@ -78,7 +78,7 @@
     <div class="cartoes">
       <div class="cartao cartao-total">
         <span class="numero">{{ n_com_dado }}</span>
-        <span class="rotulo">de {{ n_ativos }} cursos ativos com percentual calculado</span>
+        <span class="rotulo">de {{ n_ativos }} cursos ativos com percentual de extensão</span>
       </div>
       {% for m in metas %}
       <div class="cartao">
@@ -88,7 +88,7 @@
       </div>
       {% endfor %}
     </div>
-    <p class="nota">O percentual é a carga horária de extensão dividida pela carga horária do curso no PPC novo. Os cursos sem percentual calculado ainda não têm carga horária de extensão informada no PPC novo.</p>
+    <p class="nota">O percentual é a carga horária de extensão dividida pela carga horária do curso no PPC novo. Os cursos não implantados ainda não têm carga horária de extensão informada no PPC novo (percentual não calculado ou igual a zero).</p>
 
     <h3>Percentual de extensão por curso</h3>
     <div class="cartao-grande">
@@ -145,7 +145,7 @@
           <select id="f-ativo">
             <option value="">Todas</option>
             <option value="1">Em atividade</option>
-            <option value="0">Fora de atividade</option>
+            <option value="0">Em extinção</option>
           </select>
         </label>
       </div>

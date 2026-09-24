@@ -44,8 +44,8 @@ def test_status_por_centro_soma_igual_ao_total_de_ativos():
 
 
 @pytest.mark.parametrize("valor,esperado", [
-    (float("nan"), "SEM_DADO"),
-    (0.0, "ABAIXO"),
+    (float("nan"), "NAO_IMPLANTADO"),
+    (0.0, "NAO_IMPLANTADO"),
     (0.0999, "ABAIXO"),
     (0.09999999999999, "DENTRO"),
     (0.10, "DENTRO"),
@@ -62,8 +62,14 @@ def test_meta_da_base_real():
     ativos = com_meta(ativos)
     itens, com_dado = resumo_meta(ativos)
     total = {i["classe"]: i["total"] for i in itens}
-    assert com_dado == 43
-    assert total == {"ABAIXO": 2, "DENTRO": 41, "ACIMA": 0, "SEM_DADO": 75}
+    assert com_dado == 42
+    assert total == {"ABAIXO": 1, "DENTRO": 41, "ACIMA": 0, "NAO_IMPLANTADO": 76}
     assert sum(total.values()) == len(ativos)
     tabela = meta_por_centro(ativos)
     assert tabela["TOTAL"].sum() == len(ativos)
+
+
+def test_media_do_centro_ignora_cursos_nao_implantados():
+    _, ativos = base_real()
+    tabela = meta_por_centro(com_meta(ativos))
+    assert tabela.loc["CT", "MEDIA"] > 0.09

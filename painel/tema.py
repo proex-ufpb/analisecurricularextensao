@@ -12,14 +12,14 @@ CORES_META = {
     "ABAIXO": "#C2185B",
     "DENTRO": "#2E9E4F",
     "ACIMA": "#6B4FBB",
-    "SEM_DADO": "#B4B9C8",
+    "NAO_IMPLANTADO": "#B4B9C8",
 }
 
 COR_TEXTO_META = {
     "ABAIXO": "#FFFFFF",
     "DENTRO": "#15163A",
     "ACIMA": "#FFFFFF",
-    "SEM_DADO": "#15163A",
+    "NAO_IMPLANTADO": "#15163A",
 }
 
 COR_TEXTO_NA_BARRA = {

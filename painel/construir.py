@@ -93,8 +93,8 @@ def grafico_meta_por_centro(tabela):
 
 
 def grafico_ranking_meta(ativos):
-    """Um ponto por curso com percentual calculado, com a linha de 10% e a faixa de 10% a 15%."""
-    dados = ativos[ativos[COLUNA_PERCENTUAL].notna()].sort_values(
+    """Um ponto por curso implantado (percentual maior que zero), com a linha de 10% e a faixa de 10% a 15%."""
+    dados = ativos[ativos["META"] != "NAO_IMPLANTADO"].sort_values(
         [COLUNA_PERCENTUAL, "CENTRO", "CURSO"], kind="stable"
     ).reset_index(drop=True)
     rotulos = [f"{formatar_nome(c['CURSO'])} ({c['CENTRO']})" for _, c in dados.iterrows()]
@@ -125,7 +125,7 @@ def grafico_ranking_meta(ativos):
         font=dict(family=FONTE, size=12, color="#15163A"),
         separators=",.",
         legend=dict(orientation="h", yanchor="top", y=-0.05, xanchor="left", x=0, title_text=""),
-        xaxis=dict(range=[-0.5, 16], dtick=2, ticksuffix="%", gridcolor="#E6E8F2", zeroline=False,
+        xaxis=dict(range=[0, 16], dtick=2, ticksuffix="%", gridcolor="#E6E8F2", zeroline=False,
                    title="Carga horária de extensão / carga horária do curso"),
         yaxis=dict(tickmode="array", tickvals=list(dados.index), ticktext=rotulos, autorange="reversed",
                    automargin=True, showgrid=True, gridcolor="#F0F1F8", title=""),
