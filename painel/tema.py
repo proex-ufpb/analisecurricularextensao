@@ -1,6 +1,6 @@
 URL_PAINEL = "https://proex-ufpb.github.io/analisecurricularextensao/"
 # Endereço do aplicativo web do Apps Script (ver apps-script/LEIAME.md). Vazio = o painel não mostra o link.
-URL_ENVIO_RELATORIO = ""
+URL_ENVIO_RELATORIO = "https://script.google.com/macros/s/AKfycbz8GQlJD9UgbRXsF80RvVYIjAOUQgPaZNuynQ61Upl9zlU71Ka2HLb03DotCgw1q7A3/exec"
 
 NOMES_CENTROS = {
     "CBIOTEC": "Centro de Biotecnologia",

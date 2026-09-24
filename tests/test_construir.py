@@ -126,8 +126,10 @@ def test_titulo_da_pagina_do_centro_traz_a_descricao(site):
     assert "<title>CCS – Centro de Ciências da Saúde | Análise Curricular | PROEX/UFPB</title>" in html
 
 
-def test_pagina_da_equipe_existe_com_botao_desativado_sem_endereco(site):
-    html = (site / "equipe.html").read_text(encoding="utf-8")
+def test_pagina_da_equipe_existe_com_botao_desativado_sem_endereco(tmp_path, monkeypatch):
+    monkeypatch.setattr("painel.construir.URL_ENVIO_RELATORIO", "")
+    construir(csv=FIXTURE, saida=tmp_path)
+    html = (tmp_path / "equipe.html").read_text(encoding="utf-8")
     assert 'name="robots" content="noindex"' in html
     assert "Relatório" in html and "Equipe PROEX" in html
     assert "Envio em configuração" in html and "botao-principal" in html
@@ -153,3 +155,10 @@ def test_menu_do_topo_leva_a_pagina_da_equipe_em_todas_as_paginas(site):
 def test_paginas_publicas_nao_expoem_o_e_mail_da_conta_autorizada(site):
     for pagina in [site / "equipe.html", site / "index.html"] + sorted((site / "centro").glob("*.html")):
         assert "creditacaodaextensaoufpb" not in pagina.read_text(encoding="utf-8"), pagina.name
+
+
+def test_endereco_configurado_do_apps_script_aparece_na_pagina_da_equipe(site):
+    from painel.tema import URL_ENVIO_RELATORIO
+
+    assert URL_ENVIO_RELATORIO.startswith("https://script.google.com/macros/s/") and URL_ENVIO_RELATORIO.endswith("/exec")
+    assert f'href="{URL_ENVIO_RELATORIO}"' in (site / "equipe.html").read_text(encoding="utf-8")
