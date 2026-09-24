@@ -72,6 +72,8 @@ input, select { font: inherit; color: var(--texto); background: #fff; border: 1p
 .contagem { margin: 12px 0 8px; color: var(--texto-2); font-size: 0.9rem; }
 
 .rolagem { overflow-x: auto; }
+.rolagem-alta { max-height: 460px; overflow: auto; }
+.filtros-duplos { margin-top: 12px; }
 table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
 th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--borda); vertical-align: top; }
 thead th { position: sticky; top: 0; background: #eceefa; color: var(--azul); font-weight: 600; white-space: nowrap; }

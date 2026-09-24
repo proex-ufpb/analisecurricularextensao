@@ -90,24 +90,33 @@
     </div>
     <p class="nota">O percentual é a carga horária de extensão dividida pela carga horária do curso no PPC novo. Os cursos não implantados ainda não têm carga horária de extensão informada no PPC novo (percentual não calculado ou igual a zero).</p>
 
-    <h3>Percentual de extensão por curso</h3>
-    <div class="cartao-grande">
-      {{ grafico_ranking|safe }}
-    </div>
-
     <h3>Conformidade por centro</h3>
     <div class="cartao-grande">
       {{ grafico_meta_centros|safe }}
       <details class="tabela-dados">
         <summary>Ver os dados do gráfico em tabela</summary>
-        <div class="rolagem">
-          <table>
+        <div class="filtros filtros-duplos">
+          <label>Buscar curso
+            <input type="search" id="p-busca" placeholder="Nome do curso ou código e-MEC">
+          </label>
+          <label>Centro
+            <select id="p-centro">
+              <option value="">Todos</option>
+              {% for c in centros %}<option>{{ c }}</option>{% endfor %}
+            </select>
+          </label>
+        </div>
+        <p class="contagem" aria-live="polite"><span id="contagem-perc">{{ percentuais|length }}</span> de {{ percentuais|length }} cursos com percentual de extensão</p>
+        <div class="rolagem rolagem-alta">
+          <table id="tabela-percentuais">
             <thead>
-              <tr><th scope="col">Centro</th>{% for k in classes_meta %}<th scope="col" class="num">{{ rotulos_meta[k] }}</th>{% endfor %}<th scope="col" class="num">Total</th><th scope="col" class="num">Média do percentual</th></tr>
+              <tr><th scope="col">Centro</th><th scope="col">Curso</th><th scope="col">Código e-MEC</th><th scope="col" class="num">% de extensão</th></tr>
             </thead>
             <tbody>
-              {% for l in tabela_meta_centros %}
-              <tr><th scope="row">{{ l.centro }}</th>{% for k in classes_meta %}<td class="num">{{ l[k] }}</td>{% endfor %}<td class="num">{{ l.total }}</td><td class="num">{{ l.media }}</td></tr>
+              {% for c in percentuais %}
+              <tr data-centro="{{ c.centro }}" data-busca="{{ (c.curso ~ ' ' ~ c.emec)|lower }}">
+                <td>{{ c.centro }}</td><td>{{ c.curso }}</td><td>{{ c.emec }}</td><td class="num">{{ c.percentual }}</td>
+              </tr>
               {% endfor %}
             </tbody>
           </table>

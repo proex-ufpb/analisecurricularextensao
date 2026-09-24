@@ -97,9 +97,6 @@ def resumo_meta(ativos):
 def meta_por_centro(ativos):
     tabela = pd.crosstab(ativos["CENTRO"], ativos["META"]).reindex(columns=CLASSES_META, fill_value=0)
     tabela["TOTAL"] = tabela.sum(axis=1)
-    implantados = ativos[ativos["META"] != "NAO_IMPLANTADO"]
-    media = implantados.groupby("CENTRO")[COLUNA_PERCENTUAL].mean()
-    tabela["MEDIA"] = media.reindex(tabela.index)
     tabela["_centro"] = tabela.index
     return tabela.sort_values(["TOTAL", "_centro"], ascending=[False, True]).drop(columns="_centro")
 
@@ -128,6 +125,21 @@ def linhas_tabela(cursos):
             "percentual": formatar_percentual(c[COLUNA_PERCENTUAL]),
             "meta": c["META"] if c["SITUAÇÃO"] == "EM ATIVIDADE" else "",
             "meta_rotulo": ROTULOS_META[c["META"]] if c["SITUAÇÃO"] == "EM ATIVIDADE" else "—",
+        }
+        for _, c in ordenados.iterrows()
+    ]
+
+
+def linhas_percentuais(ativos):
+    """Cursos ativos com percentual de extensão (não implantados ficam de fora), do menor para o maior."""
+    implantados = ativos[ativos["META"] != "NAO_IMPLANTADO"]
+    ordenados = implantados.sort_values([COLUNA_PERCENTUAL, "CENTRO", "CURSO"], kind="stable")
+    return [
+        {
+            "centro": c["CENTRO"],
+            "curso": formatar_nome(c["CURSO"]),
+            "emec": c["CÓDIGO E-MEC"] or "Não informado",
+            "percentual": formatar_percentual(c[COLUNA_PERCENTUAL]),
         }
         for _, c in ordenados.iterrows()
     ]

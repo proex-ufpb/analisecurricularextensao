@@ -1,30 +1,34 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const campos = {
-    busca: document.getElementById("f-busca"),
-    centro: document.getElementById("f-centro"),
-    status: document.getElementById("f-status"),
-    ativo: document.getElementById("f-ativo"),
-    meta: document.getElementById("f-meta"),
-  };
-  const linhas = Array.from(document.querySelectorAll("#tabela-cursos tbody tr"));
-  const contagem = document.getElementById("contagem");
+function ligarFiltro({ tabela, contagem, campos }) {
+  const linhas = Array.from(document.querySelectorAll(`${tabela} tbody tr`));
+  const elementos = Object.fromEntries(Object.entries(campos).map(([chave, id]) => [chave, document.getElementById(id)]));
+  const saida = document.getElementById(contagem);
 
   function filtrar() {
-    const termo = campos.busca.value.trim().toLowerCase();
     let visiveis = 0;
     for (const linha of linhas) {
-      const d = linha.dataset;
-      const mostrar =
-        (!termo || d.busca.includes(termo)) &&
-        (!campos.centro.value || d.centro === campos.centro.value) &&
-        (!campos.status.value || d.status === campos.status.value) &&
-        (!campos.ativo.value || d.ativo === campos.ativo.value) &&
-        (!campos.meta.value || d.meta === campos.meta.value);
+      const mostrar = Object.entries(elementos).every(([chave, campo]) => {
+        const valor = campo.value.trim().toLowerCase();
+        if (!valor) return true;
+        return chave === "busca" ? linha.dataset.busca.includes(valor) : linha.dataset[chave].toLowerCase() === valor;
+      });
       linha.hidden = !mostrar;
       if (mostrar) visiveis += 1;
     }
-    contagem.textContent = visiveis;
+    saida.textContent = visiveis;
   }
 
-  Object.values(campos).forEach((campo) => campo.addEventListener("input", filtrar));
+  Object.values(elementos).forEach((campo) => campo.addEventListener("input", filtrar));
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  ligarFiltro({
+    tabela: "#tabela-cursos",
+    contagem: "contagem",
+    campos: { busca: "f-busca", centro: "f-centro", status: "f-status", ativo: "f-ativo", meta: "f-meta" },
+  });
+  ligarFiltro({
+    tabela: "#tabela-percentuais",
+    contagem: "contagem-perc",
+    campos: { busca: "p-busca", centro: "p-centro" },
+  });
 });

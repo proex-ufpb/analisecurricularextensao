@@ -7,6 +7,7 @@ from painel.metricas import (
     classificar_meta,
     com_meta,
     formatar_nome,
+    linhas_percentuais,
     meta_por_centro,
     resumo_meta,
     resumo_status,
@@ -69,7 +70,11 @@ def test_meta_da_base_real():
     assert tabela["TOTAL"].sum() == len(ativos)
 
 
-def test_media_do_centro_ignora_cursos_nao_implantados():
+def test_linhas_percentuais_so_implantados_em_ordem_crescente():
     _, ativos = base_real()
-    tabela = meta_por_centro(com_meta(ativos))
-    assert tabela.loc["CT", "MEDIA"] > 0.09
+    linhas = linhas_percentuais(com_meta(ativos))
+    assert len(linhas) == 42
+    assert all(l["percentual"] != "0,00%" for l in linhas)
+    assert linhas[0]["curso"] == "Engenharia de Materiais"
+    valores = [float(l["percentual"].rstrip("%").replace(",", ".")) for l in linhas]
+    assert valores == sorted(valores)
