@@ -42,7 +42,7 @@ h1 span { display: block; margin-top: 6px; color: var(--texto); font-size: 0.55e
 .lead { margin: 14px 0 0; color: var(--texto-2); max-width: 70ch; }
 .filtro-centro { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 18px 0 0; }
 .filtro-centro label { font-weight: 600; color: var(--azul); }
-.filtro-centro select { min-width: 220px; }
+.filtro-centro select { min-width: 260px; max-width: 100%; }
 .chips-reserva { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip { padding: 4px 12px; border: 1px solid #b9bdd6; border-radius: 999px; background: #fff; color: var(--azul); text-decoration: none; font-size: 0.9rem; font-weight: 500; }
 .chip:hover { background: #eceefa; }

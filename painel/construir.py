@@ -42,6 +42,7 @@ from painel.tema import (
     CORES_OFERTA,
     CORES_STATUS,
     EQUIPE,
+    NOMES_CENTROS,
     URL_ENVIO_RELATORIO,
 )
 
@@ -271,8 +272,10 @@ def _renderizar(ambiente, cursos, todos_centros, centro, raiz, atualizado_em):
         centro_atual=centro,
         titulo_pagina="Análise Curricular — Inserção Curricular da Extensão | PROEX/UFPB"
         if centro is None
+        else f"{centro} ({NOMES_CENTROS[centro]}) — Análise Curricular | PROEX/UFPB"
+        if centro in NOMES_CENTROS
         else f"Centro {centro} — Análise Curricular | PROEX/UFPB",
-        todos_centros=[{"nome": c, "slug": slug_centro(c)} for c in todos_centros],
+        todos_centros=[{"nome": c, "slug": slug_centro(c), "descricao": NOMES_CENTROS.get(c, "")} for c in todos_centros],
         n_ativos=len(ativos),
         n_fora=len(cursos) - len(ativos),
         n_cursos=len(cursos),

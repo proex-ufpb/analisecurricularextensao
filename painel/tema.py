@@ -2,6 +2,26 @@ URL_PAINEL = "https://proex-ufpb.github.io/analisecurricularextensao/"
 # Endereço do aplicativo web do Apps Script (ver apps-script/LEIAME.md). Vazio = o painel não mostra o link.
 URL_ENVIO_RELATORIO = ""
 
+NOMES_CENTROS = {
+    "CBIOTEC": "Centro de Biotecnologia",
+    "CCA": "Centro de Ciências Agrárias",
+    "CCAE": "Centro de Ciências Aplicadas e Educação",
+    "CCEN": "Centro de Ciências Exatas e da Natureza",
+    "CCHLA": "Centro de Ciências Humanas, Letras e Artes",
+    "CCHSA": "Centro de Ciências Humanas, Sociais e Agrárias",
+    "CCJ": "Centro de Ciências Jurídicas",
+    "CCM": "Centro de Ciências Médicas",
+    "CCS": "Centro de Ciências da Saúde",
+    "CCSA": "Centro de Ciências Sociais Aplicadas",
+    "CCTA": "Centro de Comunicação, Turismo e Artes",
+    "CE": "Centro de Educação",
+    "CEAR": "Centro de Energias Alternativas e Renováveis",
+    "CI": "Centro de Informática",
+    "CPT-ETS": "Centro Profissional e Tecnológico – Escola Técnica de Saúde",
+    "CT": "Centro de Tecnologia",
+    "CTDR": "Centro de Tecnologia e Desenvolvimento Regional",
+}
+
 AZUL_PROEX = "#2D2E83"
 VERMELHO_PROEX = "#E30613"
 
