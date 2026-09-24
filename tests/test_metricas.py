@@ -12,14 +12,14 @@ from painel.metricas import (
     formatar_horas,
     formatar_nome,
     formatar_pp,
+    formatar_processo,
+    formatar_resolucao,
+    linhas_tabela,
     linhas_oferta,
     oferta_por_centro,
     resumo_oferta,
     linhas_componentes,
     resumo_componentes,
-    linhas_percentuais,
-    meta_por_centro,
-    resumo_meta,
     resumo_status,
     status_por_centro,
 )
@@ -68,28 +68,6 @@ def test_classificar_meta_nos_limites(valor, esperado):
     assert classificar_meta(valor) == esperado
 
 
-def test_meta_da_base_real():
-    cursos, ativos = base_real()
-    ativos = com_meta(ativos)
-    itens, com_dado = resumo_meta(ativos)
-    total = {i["classe"]: i["total"] for i in itens}
-    assert com_dado == 42
-    assert total == {"ABAIXO": 1, "DENTRO": 41, "ACIMA": 0, "NAO_IMPLANTADO": 76}
-    assert sum(total.values()) == len(ativos)
-    tabela = meta_por_centro(ativos)
-    assert tabela["TOTAL"].sum() == len(ativos)
-
-
-def test_linhas_percentuais_so_implantados_em_ordem_crescente():
-    _, ativos = base_real()
-    linhas = linhas_percentuais(com_meta(ativos))
-    assert len(linhas) == 42
-    assert all(l["percentual"] != "0,00%" for l in linhas)
-    assert linhas[0]["curso"] == "Engenharia de Materiais"
-    valores = [float(l["percentual"].rstrip("%").replace(",", ".")) for l in linhas]
-    assert valores == sorted(valores)
-
-
 def base_extensao():
     _, ativos = base_real()
     return cursos_com_extensao(com_meta(ativos))
@@ -111,11 +89,9 @@ def test_componentes_somam_o_total_de_cada_curso():
 
 
 def test_resumo_componentes_fecha_100_por_cento():
-    itens, destaques = resumo_componentes(base_extensao())
+    itens, total_horas = resumo_componentes(base_extensao())
     assert round(sum(i["percentual"] for i in itens), 6) == 100.0
-    assert destaques["total_horas"] == "18.759"
-    assert destaques["so_obrigatorias"] == 8
-    assert destaques["maioria_livre"] == 15
+    assert total_horas == "18.759"
 
 
 def test_componentes_por_centro_preserva_o_total():
@@ -166,3 +142,40 @@ def test_linhas_oferta_ordenadas_pela_maior_margem():
     assert (linhas[0]["pct_exigido"], linhas[0]["pct_ofertado"]) == ("12,50%", "28,75%")
     margens = [float(l["margem"].replace("+", "").replace(",", ".")) for l in linhas]
     assert margens == sorted(margens, reverse=True)
+
+
+@pytest.mark.parametrize("valores,esperado", [
+    (["Nº 09/2024 (MAR-24)"], "09/2024"),
+    (["Nº 9/2024"], "09/2024"),
+    (["Nº 31/2023 (altera nº 20/2021)"], "31/2023"),
+    (["", "Nº 42/2025 (JUL-2025)"], "42/2025"),
+    (["Nº 42/2025 (JUL-2025)", "Nº 42/2025 (JUL-2025)"], "42/2025"),
+    (["PENDENTE"], "Pendente"),
+    (["#N/A (Did not find value '25/012005' in VLOOKUP evaluation.)"], "—"),
+    ([""], "—"),
+    ([], "—"),
+])
+def test_formatar_resolucao(valores, esperado):
+    assert formatar_resolucao(valores) == esperado
+
+
+@pytest.mark.parametrize("valores,esperado", [
+    (["23074.104191/2022-04"], "23074.104191/2022-04"),
+    (["#N/A (Did not find value '292006' in VLOOKUP evaluation.)", "23074.124991/2023-31"], "23074.124991/2023-31"),
+    (["NÃO CONSTA", "#N/A (Did not find value '652006' in VLOOKUP evaluation.)"], "Não consta"),
+    (["SEM PROCESSO - EXCEÇÃO"], "Sem processo (exceção)"),
+    (["#N/A (Did not find value '51998' in VLOOKUP evaluation.)"], "—"),
+    ([], "—"),
+])
+def test_formatar_processo(valores, esperado):
+    assert formatar_processo(valores) == esperado
+
+
+def test_processo_e_resolucao_da_base_real():
+    cursos, _ = base_real()
+    linhas = {(l["emec"], l["curso"]): l for l in linhas_tabela(com_meta(cursos))}
+    biotec = next(l for l in linhas.values() if l["curso"] == "Biotecnologia")
+    assert biotec["processo"] == "23074.104191/2022-04" and biotec["resolucao"] == "09/2024"
+    economicas = next(l for l in linhas.values() if l["curso"] == "Ciências Econômicas" and l["emec"] == "13394")
+    assert economicas["processo"] == "23074.028746/2023-16" and economicas["resolucao"] == "42/2025"
+    assert all(set(l) >= {"processo", "resolucao"} for l in linhas.values())

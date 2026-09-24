@@ -55,11 +55,6 @@ h2 { margin: 36px 0 12px; font-size: 1.3rem; color: var(--azul); font-weight: 60
 
 h3 { margin: 28px 0 10px; font-size: 1.05rem; color: var(--texto); font-weight: 600; }
 
-.normas { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-bottom: 16px; }
-.normas p { margin: 0; padding: 12px 16px; background: var(--superficie); border: 1px solid var(--borda); border-left: 4px solid var(--azul); border-radius: 8px; color: var(--texto-2); }
-.normas strong { color: var(--azul); }
-
-.nota-topo { margin: 0 0 14px; }
 .nota { margin: 14px 0 0; color: var(--texto-2); font-size: 0.9rem; max-width: 90ch; }
 
 .cartao-grande { background: var(--superficie); border: 1px solid var(--borda); border-radius: var(--raio); padding: 16px; }
@@ -82,6 +77,7 @@ th[scope="row"] { font-weight: 600; }
 .num { text-align: right; font-variant-numeric: tabular-nums; }
 tbody tr:hover { background: #f7f8fd; }
 tr.inativo td { color: var(--texto-2); font-style: italic; }
+.nowrap { white-space: nowrap; }
 .selo { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
 .aviso { display: inline-block; padding: 1px 8px; border-radius: 999px; background: #fff0f1; color: #a3000c; border: 1px solid #f3b5ba; font-style: normal; white-space: nowrap; }
 

@@ -8,20 +8,6 @@ CORES_STATUS = {
     "SEM PROCESSO": "#E30613",
 }
 
-CORES_META = {
-    "ABAIXO": "#C2185B",
-    "DENTRO": "#2E9E4F",
-    "ACIMA": "#6B4FBB",
-    "NAO_IMPLANTADO": "#B4B9C8",
-}
-
-COR_TEXTO_META = {
-    "ABAIXO": "#FFFFFF",
-    "DENTRO": "#15163A",
-    "ACIMA": "#FFFFFF",
-    "NAO_IMPLANTADO": "#15163A",
-}
-
 CORES_COMPONENTES = {
     "BASICA": "#0087A0",
     "COMPLEMENTAR": "#42BFD6",

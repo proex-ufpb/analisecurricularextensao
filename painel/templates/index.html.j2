@@ -69,67 +69,9 @@
     </div>
   </section>
 
-  <section aria-labelledby="t-meta">
-    <h2 id="t-meta">Extensão a integralizar pelo aluno</h2>
-    <p class="nota nota-topo">É a carga horária de extensão que o aluno precisa cumprir para concluir o curso: a exigência de cada curso. O mínimo de 10% e a faixa de 10% a 15% abaixo se aplicam a este percentual.</p>
-    <div class="normas">
-      <p><strong>Norma nacional</strong> · CNE/CES nº 7/2018: mínimo de 10% da carga horária total do curso em atividades de extensão.</p>
-      <p><strong>Norma UFPB</strong> · Resolução 02/2022 do CONSEPE: de 10% a 15% da carga horária a ser integralizada em extensão.</p>
-    </div>
-    <div class="cartoes">
-      <div class="cartao cartao-total">
-        <span class="numero">{{ n_com_dado }}</span>
-        <span class="rotulo">de {{ n_ativos }} cursos ativos com % a integralizar</span>
-      </div>
-      {% for m in metas %}
-      <div class="cartao">
-        <span class="rotulo"><i class="marca" style="background: {{ cores_meta[m.classe] }}"></i>{{ m.rotulo }}</span>
-        <span class="numero">{{ m.total }}</span>
-        <span class="percentual">{{ "%.1f"|format(m.percentual)|replace(".", ",") }}% {{ m.base }}</span>
-      </div>
-      {% endfor %}
-    </div>
-    <p class="nota">O % a integralizar é a carga horária de extensão que o aluno precisa cumprir dividida pela carga horária do curso no PPC novo. Os cursos não implantados ainda não têm esse percentual informado no PPC novo (não calculado ou igual a zero).</p>
-
-    <h3>Conformidade por centro (% a integralizar)</h3>
-    <div class="cartao-grande">
-      {{ grafico_meta_centros|safe }}
-      <details class="tabela-dados">
-        <summary>Ver os dados do gráfico em tabela</summary>
-        <div class="filtros filtros-duplos">
-          <label>Buscar curso
-            <input type="search" id="p-busca" placeholder="Nome do curso ou código e-MEC">
-          </label>
-          <label>Centro
-            <select id="p-centro">
-              <option value="">Todos</option>
-              {% for c in centros %}<option>{{ c }}</option>{% endfor %}
-            </select>
-          </label>
-        </div>
-        <p class="contagem" aria-live="polite"><span id="contagem-perc">{{ percentuais|length }}</span> de {{ percentuais|length }} cursos com % a integralizar</p>
-        <div class="rolagem rolagem-alta">
-          <table id="tabela-percentuais">
-            <thead>
-              <tr><th scope="col">Centro</th><th scope="col">Curso</th><th scope="col">Código e-MEC</th><th scope="col" class="num">% a integralizar</th></tr>
-            </thead>
-            <tbody>
-              {% for c in percentuais %}
-              <tr data-centro="{{ c.centro }}" data-busca="{{ (c.curso ~ ' ' ~ c.emec)|lower }}">
-                <td>{{ c.centro }}</td><td>{{ c.curso }}</td><td>{{ c.emec }}</td><td class="num">{{ c.percentual }}</td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </details>
-    </div>
-  </section>
-
   <section aria-labelledby="t-oferta">
     <h2 id="t-oferta">Extensão ofertada pelo curso</h2>
-    <p class="nota nota-topo">É a carga horária de extensão que o curso disponibiliza nos seus componentes curriculares. A oferta nunca é menor do que a exigência do aluno: ela é igual ou maior. Por exemplo, o aluno precisa integralizar 10% da carga horária do curso, mas o curso oferta 13%, e o aluno escolhe entre as opções.</p>
-    <p class="nota">Nos {{ oferta.total }} cursos, os alunos precisam integralizar {{ oferta.horas_exigidas }} h de extensão e os cursos ofertam {{ oferta.horas_ofertadas }} h ({{ oferta.horas_a_mais }} h a mais, {{ "%.1f"|format(oferta.pct_horas_a_mais)|replace(".", ",") }}%). A faixa de 10% a 15% vale para a exigência do aluno, não para a oferta. A margem é a diferença, em pontos percentuais (p.p.), entre o % ofertado e o % a integralizar.{% if oferta.menores %} Atenção: {{ oferta.menores }} curso(s) aparecem com oferta menor que a exigência; vale conferir na planilha.{% endif %}</p>
+    {% if oferta.menores %}<p class="nota">Atenção: {{ oferta.menores }} curso(s) aparecem com oferta menor que a exigência; vale conferir na planilha.</p>{% endif %}
 
     <h3>Exigência e oferta por centro</h3>
     <div class="cartao-grande">
@@ -174,10 +116,9 @@
 
   <section aria-labelledby="t-comp">
     <h2 id="t-comp">Componentes da extensão ofertada</h2>
-    <p class="nota nota-topo">Distribuição das horas de extensão ofertadas no PPC novo, por tipo de componente curricular, nos {{ n_extensao }} cursos ativos com % a integralizar. Componentes sem horas de extensão contam como zero.</p>
     <div class="cartoes">
       <div class="cartao cartao-total">
-        <span class="numero">{{ destaques.total_horas }}</span>
+        <span class="numero">{{ total_horas }}</span>
         <span class="rotulo">horas de extensão ofertadas em {{ n_extensao }} cursos</span>
       </div>
       {% for c in resumo_componentes %}
@@ -188,7 +129,6 @@
       </div>
       {% endfor %}
     </div>
-    <p class="nota">Em {{ destaques.so_obrigatorias }} curso(s), toda a carga horária de extensão está em componentes obrigatórios (básica e profissional ou complementar). Em {{ destaques.maioria_livre }} curso(s), a maior parte está em componentes optativos e flexíveis.</p>
 
     <h3>Distribuição por centro</h3>
     <div class="cartao-grande">
@@ -236,7 +176,7 @@
     <div class="cartao-grande">
       <div class="filtros">
         <label>Buscar curso
-          <input type="search" id="f-busca" placeholder="Nome do curso ou código e-MEC">
+          <input type="search" id="f-busca" placeholder="Curso, código e-MEC, processo ou resolução">
         </label>
         <label>Centro
           <select id="f-centro">
@@ -248,12 +188,6 @@
           <select id="f-status">
             <option value="">Todas</option>
             {% for s in prioridade %}<option value="{{ s }}">{{ rotulos[s] }}</option>{% endfor %}
-          </select>
-        </label>
-        <label>Meta (% a integralizar)
-          <select id="f-meta">
-            <option value="">Todas</option>
-            {% for k in classes_meta %}<option value="{{ k }}">{{ rotulos_meta[k] }}</option>{% endfor %}
           </select>
         </label>
         <label>Situação do curso
@@ -271,12 +205,12 @@
             <tr>
               <th scope="col">Centro</th><th scope="col">Curso</th><th scope="col">Tipo</th><th scope="col">Sede</th>
               <th scope="col">Modalidade</th><th scope="col">Turnos</th><th scope="col">Código e-MEC</th>
-              <th scope="col">Implantação</th><th scope="col" class="num">% a integralizar</th><th scope="col">Meta</th><th scope="col">Situação do curso</th>
+              <th scope="col">Implantação</th><th scope="col">Processo SIPAC</th><th scope="col">Resolução CONSEPE</th><th scope="col">Situação do curso</th>
             </tr>
           </thead>
           <tbody>
             {% for c in cursos %}
-            <tr data-centro="{{ c.centro }}" data-status="{{ c.status }}" data-ativo="{{ 1 if c.ativo else 0 }}" data-meta="{{ c.meta }}" data-busca="{{ (c.curso ~ ' ' ~ c.emec)|lower }}"{% if not c.ativo %} class="inativo"{% endif %}>
+            <tr data-centro="{{ c.centro }}" data-status="{{ c.status }}" data-ativo="{{ 1 if c.ativo else 0 }}" data-busca="{{ (c.curso ~ ' ' ~ c.emec ~ ' ' ~ c.processo ~ ' ' ~ c.resolucao)|lower }}"{% if not c.ativo %} class="inativo"{% endif %}>
               <td>{{ c.centro }}</td>
               <td>{{ c.curso }}</td>
               <td>{{ c.tipo }}</td>
@@ -285,8 +219,8 @@
               <td>{{ c.turnos }}</td>
               <td>{{ c.emec }}</td>
               <td><span class="selo"><i class="marca" style="background: {{ cores.get(c.status, '#888') }}"></i>{{ c.status_rotulo }}</span></td>
-              <td class="num">{{ c.percentual }}</td>
-              <td>{% if c.meta %}<span class="selo"><i class="marca" style="background: {{ cores_meta[c.meta] }}"></i>{{ c.meta_rotulo }}</span>{% else %}—{% endif %}</td>
+              <td class="nowrap">{{ c.processo }}</td>
+              <td class="nowrap">{{ c.resolucao }}</td>
               <td>{% if c.ativo %}{{ c.situacao }}{% else %}<span class="aviso">{{ c.situacao }}</span>{% endif %}</td>
             </tr>
             {% endfor %}

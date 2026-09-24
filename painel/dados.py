@@ -9,6 +9,7 @@ PRIORIDADE_STATUS = ["IMPLANTADO", "AGUARDANDO IMPLANTAÇÃO", "EM ANDAMENTO", "
 SITUACAO_ATIVA = "EM ATIVIDADE"
 
 COLUNAS_TEXTO = CHAVE_CURSO + ["TURNO", "SITUAÇÃO", "STATUS"]
+COLUNAS_TEXTO_OPCIONAIS = ["PROCESSO", "RESOLUÇÃO"]
 PREFIXOS_NUMERICOS = ("CH_", "CRÉDITO", "CREDITO", "%", "QTDE")
 
 
@@ -32,6 +33,9 @@ def carregar_linhas(caminho=CSV_PADRAO):
     for coluna in COLUNAS_TEXTO:
         linhas[coluna] = linhas[coluna].map(_limpar_espacos)
     linhas["CÓDIGO E-MEC"] = linhas["CÓDIGO E-MEC"].map(_limpar_emec)
+    for coluna in COLUNAS_TEXTO_OPCIONAIS:
+        if coluna in linhas.columns:
+            linhas[coluna] = linhas[coluna].map(_limpar_espacos)
     for coluna in linhas.columns:
         if coluna.startswith(PREFIXOS_NUMERICOS):
             linhas[coluna] = pd.to_numeric(linhas[coluna], errors="coerce")
@@ -51,6 +55,8 @@ def cursos_unicos(linhas):
         curso["CONFLITO_STATUS"] = grupo["STATUS"].nunique() > 1
         curso["CONFLITO_SITUACAO"] = grupo["SITUAÇÃO"].nunique() > 1
         curso["SEM_EMEC"] = chave[0] == ""
+        curso["PROCESSOS_LINHAS"] = list(grupo["PROCESSO"]) if "PROCESSO" in grupo.columns else []
+        curso["RESOLUCOES_LINHAS"] = list(grupo["RESOLUÇÃO"]) if "RESOLUÇÃO" in grupo.columns else []
         registros.append(curso)
     return pd.DataFrame(registros)
 

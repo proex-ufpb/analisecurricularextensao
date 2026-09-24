@@ -8,24 +8,19 @@ from plotly.offline import get_plotlyjs
 
 from painel.dados import CSV_PADRAO, PRIORIDADE_STATUS, carregar_linhas, cursos_ativos, cursos_unicos
 from painel.metricas import (
-    CLASSES_META,
     COMPONENTES,
     LIMITE_MAXIMO,
     LIMITE_MINIMO,
     ROTULOS_COMPONENTES,
-    ROTULOS_META,
     ROTULOS_STATUS,
     com_meta,
     componentes_por_centro,
     cursos_com_extensao,
     linhas_componentes,
     linhas_oferta,
-    linhas_percentuais,
     linhas_tabela,
-    meta_por_centro,
     oferta_por_centro,
     resumo_componentes,
-    resumo_meta,
     resumo_oferta,
     resumo_status,
     status_por_centro,
@@ -34,10 +29,8 @@ from painel.tema import (
     AZUL_PROEX,
     CONTATO,
     COR_TEXTO_COMPONENTES,
-    COR_TEXTO_META,
     COR_TEXTO_NA_BARRA,
     CORES_COMPONENTES,
-    CORES_META,
     CORES_OFERTA,
     CORES_STATUS,
     EQUIPE,
@@ -93,12 +86,6 @@ def _barras_por_centro(tabela, categorias, rotulos, cores, cores_texto, titulo_x
 def grafico_status_por_centro(tabela):
     return _barras_por_centro(
         tabela, PRIORIDADE_STATUS, ROTULOS_STATUS, CORES_STATUS, COR_TEXTO_NA_BARRA, "Cursos ativos"
-    )
-
-
-def grafico_meta_por_centro(tabela):
-    return _barras_por_centro(
-        tabela, CLASSES_META, ROTULOS_META, CORES_META, COR_TEXTO_META, "Cursos ativos"
     )
 
 
@@ -190,10 +177,8 @@ def construir(csv=CSV_PADRAO, saida=SAIDA):
     cursos = com_meta(cursos_unicos(linhas))
     ativos = cursos_ativos(cursos)
     por_centro = status_por_centro(ativos)
-    meta_centros = meta_por_centro(ativos)
-    resumo_metas, com_dado = resumo_meta(ativos)
     base_extensao = cursos_com_extensao(ativos)
-    resumo_comp, destaques = resumo_componentes(base_extensao)
+    resumo_comp, total_horas = resumo_componentes(base_extensao)
     oferta = resumo_oferta(base_extensao)
 
     saida.mkdir(parents=True, exist_ok=True)
@@ -221,18 +206,11 @@ def construir(csv=CSV_PADRAO, saida=SAIDA):
         ],
         rotulos=ROTULOS_STATUS,
         prioridade=PRIORIDADE_STATUS,
-        metas=resumo_metas,
-        n_com_dado=com_dado,
-        cores_meta=CORES_META,
-        rotulos_meta=ROTULOS_META,
-        classes_meta=CLASSES_META,
-        grafico_meta_centros=grafico_meta_por_centro(meta_centros),
-        percentuais=linhas_percentuais(ativos),
         componentes=COMPONENTES,
         rotulos_componentes=ROTULOS_COMPONENTES,
         cores_componentes=CORES_COMPONENTES,
         resumo_componentes=resumo_comp,
-        destaques=destaques,
+        total_horas=total_horas,
         n_extensao=len(base_extensao),
         grafico_componentes=grafico_componentes_por_centro(componentes_por_centro(base_extensao)),
         linhas_componentes=linhas_componentes(base_extensao),

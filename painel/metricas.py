@@ -1,3 +1,5 @@
+import re
+
 import pandas as pd
 
 from painel.dados import PRIORIDADE_STATUS
@@ -53,15 +55,6 @@ LIMITE_MINIMO = 0.10
 LIMITE_MAXIMO = 0.15
 TOLERANCIA = 1e-9
 
-CLASSES_META = ["ABAIXO", "DENTRO", "ACIMA", "NAO_IMPLANTADO"]
-ROTULOS_META = {
-    "ABAIXO": "Abaixo de 10%",
-    "DENTRO": "Entre 10% e 15%",
-    "ACIMA": "Acima de 15%",
-    "NAO_IMPLANTADO": "Não implantado",
-}
-
-
 def classificar_meta(percentual):
     if pd.isna(percentual) or percentual <= TOLERANCIA:
         return "NAO_IMPLANTADO"
@@ -76,35 +69,45 @@ def com_meta(cursos):
     return cursos.assign(META=cursos[COLUNA_PERCENTUAL].map(classificar_meta))
 
 
-def resumo_meta(ativos):
-    """Classes de conformidade; o percentual das três primeiras é sobre os cursos com percentual maior que zero."""
-    contagem = ativos["META"].value_counts()
-    com_dado = len(ativos) - int(contagem.get("NAO_IMPLANTADO", 0))
-    itens = []
-    for classe in CLASSES_META:
-        total = int(contagem.get(classe, 0))
-        base = len(ativos) if classe == "NAO_IMPLANTADO" else com_dado
-        itens.append({
-            "classe": classe,
-            "rotulo": ROTULOS_META[classe],
-            "total": total,
-            "percentual": (total / base * 100) if base else 0.0,
-            "base": "dos cursos ativos" if classe == "NAO_IMPLANTADO" else "dos cursos implantados",
-        })
-    return itens, com_dado
-
-
-def meta_por_centro(ativos):
-    tabela = pd.crosstab(ativos["CENTRO"], ativos["META"]).reindex(columns=CLASSES_META, fill_value=0)
-    tabela["TOTAL"] = tabela.sum(axis=1)
-    tabela["_centro"] = tabela.index
-    return tabela.sort_values(["TOTAL", "_centro"], ascending=[False, True]).drop(columns="_centro")
-
-
 def formatar_percentual(valor):
     if pd.isna(valor):
         return "—"
     return f"{valor * 100:.2f}".replace(".", ",") + "%"
+
+
+PADRAO_PROCESSO = re.compile(r"^\d{5}\.\d{6}/\d{4}-\d{2}$")
+PADRAO_RESOLUCAO = re.compile(r"^N\S?\s*(\d{1,3})\s*/\s*(\d{4})")
+
+
+def _unicos(valores):
+    return list(dict.fromkeys(valores))
+
+
+def formatar_processo(valores):
+    """Números de processo SIPAC válidos do curso; sem eles, o motivo registrado na planilha."""
+    validos = _unicos(v for v in valores if PADRAO_PROCESSO.match(v))
+    if validos:
+        return "; ".join(validos)
+    if any("EXCE" in v.upper() for v in valores):
+        return "Sem processo (exceção)"
+    if any(v.upper().startswith("N") and "CONSTA" in v.upper() for v in valores):
+        return "Não consta"
+    return "—"
+
+
+def formatar_resolucao(valores):
+    """Resolução CONSEPE no formato XX/XXXX; 'Pendente' quando a planilha indica pendência."""
+    numeros = []
+    for v in valores:
+        achado = PADRAO_RESOLUCAO.match(v)
+        if achado:
+            numeros.append(f"{int(achado.group(1)):02d}/{achado.group(2)}")
+    numeros = _unicos(numeros)
+    if numeros:
+        return "; ".join(numeros)
+    if any(v.upper() == "PENDENTE" for v in valores):
+        return "Pendente"
+    return "—"
 
 
 def linhas_tabela(cursos):
@@ -122,27 +125,12 @@ def linhas_tabela(cursos):
             "status_rotulo": ROTULOS_STATUS.get(c["STATUS"], formatar_nome(c["STATUS"])),
             "situacao": formatar_nome(c["SITUAÇÃO"]),
             "ativo": c["SITUAÇÃO"] == "EM ATIVIDADE",
-            "percentual": formatar_percentual(c[COLUNA_PERCENTUAL]),
-            "meta": c["META"] if c["SITUAÇÃO"] == "EM ATIVIDADE" else "",
-            "meta_rotulo": ROTULOS_META[c["META"]] if c["SITUAÇÃO"] == "EM ATIVIDADE" else "—",
+            "processo": formatar_processo(c.get("PROCESSOS_LINHAS", [])),
+            "resolucao": formatar_resolucao(c.get("RESOLUCOES_LINHAS", [])),
         }
         for _, c in ordenados.iterrows()
     ]
 
-
-def linhas_percentuais(ativos):
-    """Cursos ativos com percentual de extensão (não implantados ficam de fora), do menor para o maior."""
-    implantados = ativos[ativos["META"] != "NAO_IMPLANTADO"]
-    ordenados = implantados.sort_values([COLUNA_PERCENTUAL, "CENTRO", "CURSO"], kind="stable")
-    return [
-        {
-            "centro": c["CENTRO"],
-            "curso": formatar_nome(c["CURSO"]),
-            "emec": c["CÓDIGO E-MEC"] or "Não informado",
-            "percentual": formatar_percentual(c[COLUNA_PERCENTUAL]),
-        }
-        for _, c in ordenados.iterrows()
-    ]
 
 
 COMPONENTES = ["BASICA", "COMPLEMENTAR", "OPTATIVA", "FLEXIVEL"]
@@ -191,14 +179,7 @@ def resumo_componentes(base):
             "percentual": (horas / total * 100) if total else 0.0,
             "cursos": int((base[coluna] > 0).sum()),
         })
-    obrigatorias = base["CH_BASICA_PROFISSIONAL_EXT"] + base["CH_COMPL_OBRIG_EXT"]
-    livres = base["CH_OPTATIVA_EXT"] + base["CH_FLEXÍVEL_EXT"]
-    destaques = {
-        "so_obrigatorias": int(((livres == 0) & (base[COLUNA_TOTAL_EXT] > 0)).sum()),
-        "maioria_livre": int((livres > obrigatorias).sum()),
-        "total_horas": formatar_horas(total),
-    }
-    return itens, destaques
+    return itens, formatar_horas(total)
 
 
 def componentes_por_centro(base):

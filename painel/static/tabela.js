@@ -24,12 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
   ligarFiltro({
     tabela: "#tabela-cursos",
     contagem: "contagem",
-    campos: { busca: "f-busca", centro: "f-centro", status: "f-status", ativo: "f-ativo", meta: "f-meta" },
-  });
-  ligarFiltro({
-    tabela: "#tabela-percentuais",
-    contagem: "contagem-perc",
-    campos: { busca: "p-busca", centro: "p-centro" },
+    campos: { busca: "f-busca", centro: "f-centro", status: "f-status", ativo: "f-ativo" },
   });
   ligarFiltro({
     tabela: "#tabela-oferta",
