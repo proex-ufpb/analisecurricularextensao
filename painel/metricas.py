@@ -48,6 +48,67 @@ def status_por_centro(ativos):
     return tabela.sort_values(["TOTAL", "_centro"], ascending=[False, True]).drop(columns="_centro")
 
 
+COLUNA_PERCENTUAL = "% CH_INTEGRALIZADA_EXTENSAO"
+LIMITE_MINIMO = 0.10
+LIMITE_MAXIMO = 0.15
+TOLERANCIA = 1e-9
+
+CLASSES_META = ["ABAIXO", "DENTRO", "ACIMA", "SEM_DADO"]
+ROTULOS_META = {
+    "ABAIXO": "Abaixo de 10%",
+    "DENTRO": "Entre 10% e 15%",
+    "ACIMA": "Acima de 15%",
+    "SEM_DADO": "Sem dado",
+}
+
+
+def classificar_meta(percentual):
+    if pd.isna(percentual):
+        return "SEM_DADO"
+    if percentual < LIMITE_MINIMO - TOLERANCIA:
+        return "ABAIXO"
+    if percentual > LIMITE_MAXIMO + TOLERANCIA:
+        return "ACIMA"
+    return "DENTRO"
+
+
+def com_meta(cursos):
+    return cursos.assign(META=cursos[COLUNA_PERCENTUAL].map(classificar_meta))
+
+
+def resumo_meta(ativos):
+    """Classes de conformidade; o percentual das três primeiras é sobre os cursos com dado."""
+    contagem = ativos["META"].value_counts()
+    com_dado = len(ativos) - int(contagem.get("SEM_DADO", 0))
+    itens = []
+    for classe in CLASSES_META:
+        total = int(contagem.get(classe, 0))
+        base = len(ativos) if classe == "SEM_DADO" else com_dado
+        itens.append({
+            "classe": classe,
+            "rotulo": ROTULOS_META[classe],
+            "total": total,
+            "percentual": (total / base * 100) if base else 0.0,
+            "base": "dos cursos ativos" if classe == "SEM_DADO" else "dos cursos com percentual",
+        })
+    return itens, com_dado
+
+
+def meta_por_centro(ativos):
+    tabela = pd.crosstab(ativos["CENTRO"], ativos["META"]).reindex(columns=CLASSES_META, fill_value=0)
+    tabela["TOTAL"] = tabela.sum(axis=1)
+    media = ativos.groupby("CENTRO")[COLUNA_PERCENTUAL].mean()
+    tabela["MEDIA"] = media.reindex(tabela.index)
+    tabela["_centro"] = tabela.index
+    return tabela.sort_values(["TOTAL", "_centro"], ascending=[False, True]).drop(columns="_centro")
+
+
+def formatar_percentual(valor):
+    if pd.isna(valor):
+        return "—"
+    return f"{valor * 100:.2f}".replace(".", ",") + "%"
+
+
 def linhas_tabela(cursos):
     ordenados = cursos.sort_values(["CENTRO", "CURSO", "SEDE"])
     return [
@@ -63,6 +124,9 @@ def linhas_tabela(cursos):
             "status_rotulo": ROTULOS_STATUS.get(c["STATUS"], formatar_nome(c["STATUS"])),
             "situacao": formatar_nome(c["SITUAÇÃO"]),
             "ativo": c["SITUAÇÃO"] == "EM ATIVIDADE",
+            "percentual": formatar_percentual(c[COLUNA_PERCENTUAL]),
+            "meta": c["META"] if c["SITUAÇÃO"] == "EM ATIVIDADE" else "",
+            "meta_rotulo": ROTULOS_META[c["META"]] if c["SITUAÇÃO"] == "EM ATIVIDADE" else "—",
         }
         for _, c in ordenados.iterrows()
     ]

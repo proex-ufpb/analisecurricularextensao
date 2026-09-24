@@ -69,6 +69,53 @@
     </div>
   </section>
 
+  <section aria-labelledby="t-meta">
+    <h2 id="t-meta">Carga horária de extensão</h2>
+    <div class="normas">
+      <p><strong>Norma nacional</strong> · CNE/CES nº 7/2018: mínimo de 10% da carga horária total do curso em atividades de extensão.</p>
+      <p><strong>Norma UFPB</strong> · Resolução 02/2022 do CONSEPE: de 10% a 15% da carga horária a ser integralizada em extensão.</p>
+    </div>
+    <div class="cartoes">
+      <div class="cartao cartao-total">
+        <span class="numero">{{ n_com_dado }}</span>
+        <span class="rotulo">de {{ n_ativos }} cursos ativos com percentual calculado</span>
+      </div>
+      {% for m in metas %}
+      <div class="cartao">
+        <span class="rotulo"><i class="marca" style="background: {{ cores_meta[m.classe] }}"></i>{{ m.rotulo }}</span>
+        <span class="numero">{{ m.total }}</span>
+        <span class="percentual">{{ "%.1f"|format(m.percentual)|replace(".", ",") }}% {{ m.base }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    <p class="nota">O percentual é a carga horária de extensão dividida pela carga horária do curso no PPC novo. Os cursos sem percentual calculado ainda não têm carga horária de extensão informada no PPC novo.</p>
+
+    <h3>Percentual de extensão por curso</h3>
+    <div class="cartao-grande">
+      {{ grafico_ranking|safe }}
+    </div>
+
+    <h3>Conformidade por centro</h3>
+    <div class="cartao-grande">
+      {{ grafico_meta_centros|safe }}
+      <details class="tabela-dados">
+        <summary>Ver os dados do gráfico em tabela</summary>
+        <div class="rolagem">
+          <table>
+            <thead>
+              <tr><th scope="col">Centro</th>{% for k in classes_meta %}<th scope="col" class="num">{{ rotulos_meta[k] }}</th>{% endfor %}<th scope="col" class="num">Total</th><th scope="col" class="num">Média do percentual</th></tr>
+            </thead>
+            <tbody>
+              {% for l in tabela_meta_centros %}
+              <tr><th scope="row">{{ l.centro }}</th>{% for k in classes_meta %}<td class="num">{{ l[k] }}</td>{% endfor %}<td class="num">{{ l.total }}</td><td class="num">{{ l.media }}</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </div>
+  </section>
+
   <section aria-labelledby="t-cursos">
     <h2 id="t-cursos">Cursos</h2>
     <div class="cartao-grande">
@@ -88,6 +135,12 @@
             {% for s in prioridade %}<option value="{{ s }}">{{ rotulos[s] }}</option>{% endfor %}
           </select>
         </label>
+        <label>Meta de extensão
+          <select id="f-meta">
+            <option value="">Todas</option>
+            {% for k in classes_meta %}<option value="{{ k }}">{{ rotulos_meta[k] }}</option>{% endfor %}
+          </select>
+        </label>
         <label>Situação do curso
           <select id="f-ativo">
             <option value="">Todas</option>
@@ -103,12 +156,12 @@
             <tr>
               <th scope="col">Centro</th><th scope="col">Curso</th><th scope="col">Tipo</th><th scope="col">Sede</th>
               <th scope="col">Modalidade</th><th scope="col">Turnos</th><th scope="col">Código e-MEC</th>
-              <th scope="col">Implantação</th><th scope="col">Situação do curso</th>
+              <th scope="col">Implantação</th><th scope="col" class="num">% de extensão</th><th scope="col">Meta</th><th scope="col">Situação do curso</th>
             </tr>
           </thead>
           <tbody>
             {% for c in cursos %}
-            <tr data-centro="{{ c.centro }}" data-status="{{ c.status }}" data-ativo="{{ 1 if c.ativo else 0 }}" data-busca="{{ (c.curso ~ ' ' ~ c.emec)|lower }}"{% if not c.ativo %} class="inativo"{% endif %}>
+            <tr data-centro="{{ c.centro }}" data-status="{{ c.status }}" data-ativo="{{ 1 if c.ativo else 0 }}" data-meta="{{ c.meta }}" data-busca="{{ (c.curso ~ ' ' ~ c.emec)|lower }}"{% if not c.ativo %} class="inativo"{% endif %}>
               <td>{{ c.centro }}</td>
               <td>{{ c.curso }}</td>
               <td>{{ c.tipo }}</td>
@@ -117,6 +170,8 @@
               <td>{{ c.turnos }}</td>
               <td>{{ c.emec }}</td>
               <td><span class="selo"><i class="marca" style="background: {{ cores.get(c.status, '#888') }}"></i>{{ c.status_rotulo }}</span></td>
+              <td class="num">{{ c.percentual }}</td>
+              <td>{% if c.meta %}<span class="selo"><i class="marca" style="background: {{ cores_meta[c.meta] }}"></i>{{ c.meta_rotulo }}</span>{% else %}—{% endif %}</td>
               <td>{% if c.ativo %}{{ c.situacao }}{% else %}<span class="aviso">{{ c.situacao }}</span>{% endif %}</td>
             </tr>
             {% endfor %}
