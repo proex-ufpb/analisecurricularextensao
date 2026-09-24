@@ -228,3 +228,78 @@ def linhas_componentes(base):
             linha[chave] = formatar_horas(c[coluna])
         linhas.append(linha)
     return linhas
+
+
+COLUNA_OFERTA = "%CH_EXT_DISPONÍVEL"
+COLUNA_HORAS_EXIGIDAS = "CH_INTEGRALIZADA_EXTENSAO"
+
+
+def _margem_pp(base):
+    return (base[COLUNA_OFERTA] - base[COLUNA_PERCENTUAL]) * 100
+
+
+def formatar_pp(valor):
+    if abs(valor) <= 1e-6:
+        return "0,00"
+    return f"{valor:+.2f}".replace(".", ",")
+
+
+def resumo_oferta(base):
+    """Compara o que o aluno precisa integralizar com o que o curso oferta."""
+    margem = _margem_pp(base)
+    total = len(base)
+    iguais = int((margem.abs() <= 1e-6).sum())
+    maiores = int((margem > 1e-6).sum())
+    maior = base.loc[margem.idxmax()]
+    horas_exigidas = float(base[COLUNA_HORAS_EXIGIDAS].fillna(0).sum())
+    horas_ofertadas = float(base[COLUNA_TOTAL_EXT].sum())
+    return {
+        "total": total,
+        "iguais": iguais,
+        "maiores": maiores,
+        "menores": int((margem < -1e-6).sum()),
+        "pct_iguais": iguais / total * 100 if total else 0.0,
+        "pct_maiores": maiores / total * 100 if total else 0.0,
+        "margem_media": formatar_pp(margem.mean()),
+        "maior_margem": formatar_pp(margem.max()),
+        "maior_curso": formatar_nome(maior["CURSO"]),
+        "maior_centro": maior["CENTRO"],
+        "maior_exigido": formatar_percentual(maior[COLUNA_PERCENTUAL]),
+        "maior_ofertado": formatar_percentual(maior[COLUNA_OFERTA]),
+        "acima_teto": int((base[COLUNA_OFERTA] > LIMITE_MAXIMO + TOLERANCIA).sum()),
+        "horas_exigidas": formatar_horas(horas_exigidas),
+        "horas_ofertadas": formatar_horas(horas_ofertadas),
+        "horas_a_mais": formatar_horas(horas_ofertadas - horas_exigidas),
+        "pct_horas_a_mais": ((horas_ofertadas / horas_exigidas - 1) * 100) if horas_exigidas else 0.0,
+    }
+
+
+def oferta_por_centro(base):
+    """Média, por centro, do % a integralizar e do % ofertado (em pontos percentuais)."""
+    tabela = base.groupby("CENTRO").agg(
+        EXIGIDO=(COLUNA_PERCENTUAL, "mean"),
+        OFERTADO=(COLUNA_OFERTA, "mean"),
+        CURSOS=("CURSO", "count"),
+    )
+    tabela[["EXIGIDO", "OFERTADO"]] = tabela[["EXIGIDO", "OFERTADO"]] * 100
+    tabela["_centro"] = tabela.index
+    return tabela.sort_values(["OFERTADO", "_centro"], ascending=[False, True]).drop(columns="_centro")
+
+
+def linhas_oferta(base):
+    """Um curso por linha, da maior para a menor margem entre oferta e exigência."""
+    base = base.assign(_margem=_margem_pp(base))
+    ordenados = base.sort_values(["_margem", "CENTRO", "CURSO"], ascending=[False, True, True], kind="stable")
+    return [
+        {
+            "centro": c["CENTRO"],
+            "curso": formatar_nome(c["CURSO"]),
+            "emec": c["CÓDIGO E-MEC"] or "Não informado",
+            "horas_exigidas": formatar_horas(c[COLUNA_HORAS_EXIGIDAS]),
+            "pct_exigido": formatar_percentual(c[COLUNA_PERCENTUAL]),
+            "horas_ofertadas": formatar_horas(c[COLUNA_TOTAL_EXT]),
+            "pct_ofertado": formatar_percentual(c[COLUNA_OFERTA]),
+            "margem": formatar_pp(c["_margem"]),
+        }
+        for _, c in ordenados.iterrows()
+    ]

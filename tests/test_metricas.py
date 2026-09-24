@@ -11,6 +11,10 @@ from painel.metricas import (
     cursos_com_extensao,
     formatar_horas,
     formatar_nome,
+    formatar_pp,
+    linhas_oferta,
+    oferta_por_centro,
+    resumo_oferta,
     linhas_componentes,
     resumo_componentes,
     linhas_percentuais,
@@ -127,3 +131,41 @@ def test_linhas_componentes_uma_por_curso():
     biotec = next(l for l in linhas if l["curso"] == "Biotecnologia")
     assert (biotec["BASICA"], biotec["COMPLEMENTAR"], biotec["OPTATIVA"], biotec["FLEXIVEL"]) == ("150", "120", "120", "—")
     assert biotec["total"] == "390" and biotec["obrigatorias"] == "69%"
+
+
+def test_formatar_pp():
+    assert formatar_pp(0.0) == "0,00"
+    assert formatar_pp(16.25) == "+16,25"
+    assert formatar_pp(-1.5) == "-1,50"
+
+
+def test_oferta_nunca_e_menor_que_a_exigencia_na_base_real():
+    resumo = resumo_oferta(base_extensao())
+    assert resumo["menores"] == 0
+    assert resumo["iguais"] + resumo["maiores"] == resumo["total"] == 42
+    assert (resumo["iguais"], resumo["maiores"]) == (14, 28)
+
+
+def test_resumo_oferta_horas_e_destaques():
+    resumo = resumo_oferta(base_extensao())
+    assert resumo["horas_exigidas"] == "14.797,5"
+    assert resumo["horas_ofertadas"] == "18.759"
+    assert resumo["horas_a_mais"] == "3.961,5"
+    assert resumo["acima_teto"] == 9
+    assert resumo["maior_curso"] == "Hotelaria" and resumo["maior_centro"] == "CCTA"
+    assert resumo["maior_margem"] == "+16,25"
+
+
+def test_oferta_por_centro_media_exigido_menor_ou_igual_ao_ofertado():
+    tabela = oferta_por_centro(base_extensao())
+    assert (tabela["OFERTADO"] >= tabela["EXIGIDO"] - 1e-9).all()
+    assert tabela["CURSOS"].sum() == 42
+
+
+def test_linhas_oferta_ordenadas_pela_maior_margem():
+    linhas = linhas_oferta(base_extensao())
+    assert len(linhas) == 42
+    assert linhas[0]["curso"] == "Hotelaria"
+    assert (linhas[0]["pct_exigido"], linhas[0]["pct_ofertado"]) == ("12,50%", "28,75%")
+    margens = [float(l["margem"].replace("+", "").replace(",", ".")) for l in linhas]
+    assert margens == sorted(margens, reverse=True)

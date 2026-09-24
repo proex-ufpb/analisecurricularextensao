@@ -10,6 +10,8 @@ from painel.dados import CSV_PADRAO, PRIORIDADE_STATUS, carregar_linhas, cursos_
 from painel.metricas import (
     CLASSES_META,
     COMPONENTES,
+    LIMITE_MAXIMO,
+    LIMITE_MINIMO,
     ROTULOS_COMPONENTES,
     ROTULOS_META,
     ROTULOS_STATUS,
@@ -17,11 +19,14 @@ from painel.metricas import (
     componentes_por_centro,
     cursos_com_extensao,
     linhas_componentes,
+    linhas_oferta,
     linhas_percentuais,
     linhas_tabela,
     meta_por_centro,
+    oferta_por_centro,
     resumo_componentes,
     resumo_meta,
+    resumo_oferta,
     resumo_status,
     status_por_centro,
 )
@@ -33,6 +38,7 @@ from painel.tema import (
     COR_TEXTO_NA_BARRA,
     CORES_COMPONENTES,
     CORES_META,
+    CORES_OFERTA,
     CORES_STATUS,
     EQUIPE,
 )
@@ -134,6 +140,51 @@ def grafico_componentes_por_centro(tabela):
     return _html(fig)
 
 
+def grafico_exigencia_oferta(tabela):
+    """Média por centro do % que o aluno integraliza e do % que o curso oferta, com a faixa de 10% a 15%."""
+    centros = list(tabela.index)
+    fig = go.Figure()
+    fig.add_vrect(x0=LIMITE_MINIMO * 100, x1=LIMITE_MAXIMO * 100, fillcolor="#2E9E4F", opacity=0.12,
+                  line_width=0, layer="below")
+    series = (
+        ("EXIGIDO", "A integralizar (exigido do aluno)"),
+        ("OFERTADO", "Ofertado (disponível no curso)"),
+    )
+    for chave, nome in series:
+        fig.add_bar(
+            y=centros,
+            x=tabela[chave],
+            orientation="h",
+            name=nome,
+            marker=dict(color=CORES_OFERTA[chave], line=dict(color="#FFFFFF", width=1)),
+            text=[f"{v:.1f}%".replace(".", ",") for v in tabela[chave]],
+            textposition="outside",
+            cliponaxis=False,
+            textfont=dict(size=11, color="#15163A"),
+            customdata=tabela["CURSOS"],
+            hovertemplate="<b>%{y}</b><br>" + nome + ": %{x:.2f}% (média de %{customdata} curso(s))<extra></extra>",
+        )
+    fig.add_annotation(x=(LIMITE_MINIMO + LIMITE_MAXIMO) / 2 * 100, y=1.0, yref="paper", xanchor="center",
+                       yanchor="bottom", showarrow=False, text="Faixa UFPB para o que o aluno integraliza: 10% a 15%",
+                       font=dict(color="#1E6B36", size=12), yshift=4)
+    fig.update_layout(
+        barmode="group",
+        bargap=0.25,
+        height=max(360, 46 * len(centros) + 150),
+        margin=dict(l=8, r=40, t=40, b=8),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(family=FONTE, size=13, color="#15163A"),
+        separators=",.",
+        legend=dict(orientation="h", yanchor="top", y=-0.1, xanchor="left", x=0, title_text="", traceorder="normal"),
+        xaxis=dict(title="Média dos cursos do centro", ticksuffix="%", range=[0, 32], dtick=5, gridcolor="#E6E8F2",
+                   zeroline=False),
+        yaxis=dict(autorange="reversed", automargin=True, title=""),
+        hoverlabel=dict(font=dict(family=FONTE)),
+    )
+    return _html(fig)
+
+
 def construir(csv=CSV_PADRAO, saida=SAIDA):
     linhas = carregar_linhas(csv)
     cursos = com_meta(cursos_unicos(linhas))
@@ -143,6 +194,7 @@ def construir(csv=CSV_PADRAO, saida=SAIDA):
     resumo_metas, com_dado = resumo_meta(ativos)
     base_extensao = cursos_com_extensao(ativos)
     resumo_comp, destaques = resumo_componentes(base_extensao)
+    oferta = resumo_oferta(base_extensao)
 
     saida.mkdir(parents=True, exist_ok=True)
     (saida / "plotly.min.js").write_text(get_plotlyjs(), encoding="utf-8")
@@ -184,6 +236,10 @@ def construir(csv=CSV_PADRAO, saida=SAIDA):
         n_extensao=len(base_extensao),
         grafico_componentes=grafico_componentes_por_centro(componentes_por_centro(base_extensao)),
         linhas_componentes=linhas_componentes(base_extensao),
+        oferta=oferta,
+        cores_oferta=CORES_OFERTA,
+        grafico_oferta=grafico_exigencia_oferta(oferta_por_centro(base_extensao)),
+        linhas_oferta=linhas_oferta(base_extensao),
         cursos=linhas_tabela(cursos),
         centros=sorted(cursos["CENTRO"].unique()),
         contato=CONTATO,
