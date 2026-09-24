@@ -84,3 +84,22 @@ def test_cartoes_da_pagina_do_centro_usam_so_os_cursos_dele(site):
     cursos = cursos_unicos(carregar_linhas(FIXTURE))
     ccs = cursos[(cursos["CENTRO"] == "CCS") & (cursos["SITUAÇÃO"] == "EM ATIVIDADE")]
     assert ativos == len(ccs)
+
+
+def test_todo_link_e_arquivo_referenciado_existe_em_todas_as_paginas(site):
+    paginas = [site / "index.html"] + sorted((site / "centro").glob("*.html"))
+    for pagina in paginas:
+        html = pagina.read_text(encoding="utf-8")
+        menu = re.search(r'<select id="filtro-centro"[^>]*>(.*?)</select>', html, re.S).group(1)
+        alvos = re.findall(r'<option value="([^"]+)"', menu)
+        alvos += re.findall(r'(?:href|src)="((?!https?:|#|mailto:)[^"]+)"', html)
+        assert alvos, pagina
+        for alvo in alvos:
+            assert (pagina.parent / alvo).resolve().exists(), f"{pagina.name}: {alvo} não existe"
+
+
+def test_todas_as_paginas_tem_menu_cabecalho_e_pelo_menos_um_grafico(site):
+    for pagina in [site / "index.html"] + sorted((site / "centro").glob("*.html")):
+        html = pagina.read_text(encoding="utf-8")
+        assert 'id="filtro-centro"' in html and "<header" in html and "<footer" in html, pagina.name
+        assert "plotly-graph-div" in html, pagina.name
