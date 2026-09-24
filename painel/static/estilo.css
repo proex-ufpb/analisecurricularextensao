@@ -1,0 +1,91 @@
+:root {
+  --azul: #2d2e83;
+  --vermelho: #e30613;
+  --fundo: #f5f6fb;
+  --superficie: #ffffff;
+  --texto: #15163a;
+  --texto-2: #4a4c69;
+  --borda: #dde0ee;
+  --foco: #e30613;
+  --raio: 12px;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  background: var(--fundo);
+  color: var(--texto);
+  font-family: "Saira", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.pular { position: absolute; left: -999px; top: 8px; background: var(--azul); color: #fff; padding: 8px 12px; border-radius: 6px; z-index: 10; }
+.pular:focus { left: 8px; }
+
+a { color: var(--azul); }
+:focus-visible { outline: 3px solid var(--foco); outline-offset: 2px; }
+
+.topo { background: var(--superficie); border-bottom: 4px solid var(--azul); }
+.topo-interno { max-width: 1120px; margin: 0 auto; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.logo-ufpb { height: 64px; width: auto; }
+.logo-proex { height: 56px; width: auto; }
+
+main { max-width: 1120px; margin: 0 auto; padding: 8px 16px 40px; }
+
+.abertura { padding: 28px 0 8px; }
+h1 { margin: 0; color: var(--azul); font-size: clamp(1.7rem, 4.5vw, 2.6rem); line-height: 1.1; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; }
+h1 span { display: block; margin-top: 6px; color: var(--texto); font-size: 0.55em; font-weight: 500; letter-spacing: 0.08em; }
+.lead { margin: 14px 0 0; color: var(--texto-2); max-width: 70ch; }
+
+h2 { margin: 36px 0 12px; font-size: 1.3rem; color: var(--azul); font-weight: 600; }
+
+.cartoes { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+.cartao { background: var(--superficie); border: 1px solid var(--borda); border-radius: var(--raio); padding: 16px; display: flex; flex-direction: column; gap: 4px; }
+.cartao .rotulo { display: flex; align-items: center; gap: 8px; color: var(--texto-2); font-weight: 500; }
+.cartao .numero { font-size: 2.2rem; font-weight: 700; line-height: 1.1; }
+.cartao .percentual { color: var(--texto-2); font-size: 0.9rem; }
+.cartao-total { background: var(--azul); border-color: var(--azul); color: #fff; justify-content: center; }
+.cartao-total .rotulo { color: #dfe0ff; }
+.marca { display: inline-block; width: 12px; height: 12px; border-radius: 3px; flex: none; }
+
+.nota { margin: 14px 0 0; color: var(--texto-2); font-size: 0.9rem; max-width: 90ch; }
+
+.cartao-grande { background: var(--superficie); border: 1px solid var(--borda); border-radius: var(--raio); padding: 16px; }
+
+.tabela-dados { margin-top: 12px; }
+.tabela-dados summary { cursor: pointer; color: var(--azul); font-weight: 600; }
+
+.filtros { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+.filtros label { display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; font-weight: 500; color: var(--texto-2); }
+input, select { font: inherit; color: var(--texto); background: #fff; border: 1px solid #b9bdd6; border-radius: 8px; padding: 8px 10px; min-height: 40px; }
+.contagem { margin: 12px 0 8px; color: var(--texto-2); font-size: 0.9rem; }
+
+.rolagem { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--borda); vertical-align: top; }
+thead th { position: sticky; top: 0; background: #eceefa; color: var(--azul); font-weight: 600; white-space: nowrap; }
+th[scope="row"] { font-weight: 600; }
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+tbody tr:hover { background: #f7f8fd; }
+tr.inativo td { color: var(--texto-2); font-style: italic; }
+.selo { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.aviso { display: inline-block; padding: 1px 8px; border-radius: 999px; background: #fff0f1; color: #a3000c; border: 1px solid #f3b5ba; font-style: normal; white-space: nowrap; }
+
+.rodape { background: var(--azul); color: #fff; margin-top: 24px; }
+.rodape-interno { max-width: 1120px; margin: 0 auto; padding: 28px 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 28px; }
+.rodape h2 { margin: 0 0 10px; color: #fff; font-size: 1.1rem; }
+.rodape p { margin: 4px 0; }
+.rodape a { color: #fff; }
+.rodape .fonte { margin-top: 12px; color: #d3d5ff; font-size: 0.9rem; }
+.rodape ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.rodape li strong { display: block; font-weight: 600; }
+.rodape li span { color: #d3d5ff; font-size: 0.9rem; }
+
+@media (max-width: 560px) {
+  .logo-ufpb { height: 48px; }
+  .logo-proex { height: 40px; }
+}

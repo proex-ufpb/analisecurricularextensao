@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Análise Curricular — Inserção Curricular da Extensão | PROEX/UFPB</title>
+<meta name="description" content="Acompanhamento da inserção curricular da extensão nos cursos de graduação da UFPB.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="estilo.css">
+<script src="tabela.js" defer></script>
+</head>
+<body>
+<a class="pular" href="#conteudo">Ir para o conteúdo</a>
+<header class="topo">
+  <div class="topo-interno">
+    <img class="logo-ufpb" src="logo-ufpb.svg" alt="Brasão da Universidade Federal da Paraíba">
+    <img class="logo-proex" src="logo-proex.png" alt="PROEX — Pró-Reitoria de Extensão/UFPB">
+  </div>
+</header>
+
+<main id="conteudo">
+  <section class="abertura">
+    <h1>Análise Curricular<span>Inserção curricular da extensão</span></h1>
+    <p class="lead">Situação de implantação da inserção curricular da extensão nos cursos de graduação da UFPB. Dados atualizados em {{ atualizado_em }}.</p>
+  </section>
+
+  <section aria-labelledby="t-resumo">
+    <h2 id="t-resumo">Visão geral</h2>
+    <div class="cartoes">
+      <div class="cartao cartao-total">
+        <span class="numero">{{ n_ativos }}</span>
+        <span class="rotulo">cursos ativos</span>
+      </div>
+      {% for s in status %}
+      <div class="cartao">
+        <span class="rotulo"><i class="marca" style="background: {{ cores[s.status] }}"></i>{{ s.rotulo }}</span>
+        <span class="numero">{{ s.total }}</span>
+        <span class="percentual">{{ "%.1f"|format(s.percentual)|replace(".", ",") }}% dos cursos ativos</span>
+      </div>
+      {% endfor %}
+    </div>
+    <p class="nota">Cada curso é contado uma única vez, pelo código e-MEC: cursos com mais de um turno ou oferta contam como um só. Quando as ofertas de um mesmo curso estão em situações diferentes, prevalece a mais avançada (Implantado &gt; Aguardando implantação &gt; Em andamento &gt; Sem processo). {{ n_fora }} curso(s) fora de atividade aparecem na tabela, mas não entram nos totais e percentuais.</p>
+  </section>
+
+  <section aria-labelledby="t-centros">
+    <h2 id="t-centros">Situação de implantação por centro</h2>
+    <div class="cartao-grande">
+      <script src="plotly.min.js"></script>
+      {{ grafico|safe }}
+      <details class="tabela-dados">
+        <summary>Ver os dados do gráfico em tabela</summary>
+        <div class="rolagem">
+          <table>
+            <thead>
+              <tr><th scope="col">Centro</th>{% for s in prioridade %}<th scope="col" class="num">{{ rotulos[s] }}</th>{% endfor %}<th scope="col" class="num">Total</th></tr>
+            </thead>
+            <tbody>
+              {% for l in tabela_centros %}
+              <tr><th scope="row">{{ l.centro }}</th>{% for s in prioridade %}<td class="num">{{ l[s] }}</td>{% endfor %}<td class="num">{{ l.total }}</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section aria-labelledby="t-cursos">
+    <h2 id="t-cursos">Cursos</h2>
+    <div class="cartao-grande">
+      <div class="filtros">
+        <label>Buscar curso
+          <input type="search" id="f-busca" placeholder="Nome do curso ou código e-MEC">
+        </label>
+        <label>Centro
+          <select id="f-centro">
+            <option value="">Todos</option>
+            {% for c in centros %}<option>{{ c }}</option>{% endfor %}
+          </select>
+        </label>
+        <label>Situação de implantação
+          <select id="f-status">
+            <option value="">Todas</option>
+            {% for s in prioridade %}<option value="{{ s }}">{{ rotulos[s] }}</option>{% endfor %}
+          </select>
+        </label>
+        <label>Situação do curso
+          <select id="f-ativo">
+            <option value="">Todas</option>
+            <option value="1">Em atividade</option>
+            <option value="0">Fora de atividade</option>
+          </select>
+        </label>
+      </div>
+      <p class="contagem" aria-live="polite"><span id="contagem">{{ n_cursos }}</span> de {{ n_cursos }} cursos</p>
+      <div class="rolagem">
+        <table id="tabela-cursos">
+          <thead>
+            <tr>
+              <th scope="col">Centro</th><th scope="col">Curso</th><th scope="col">Tipo</th><th scope="col">Sede</th>
+              <th scope="col">Modalidade</th><th scope="col">Turnos</th><th scope="col">Código e-MEC</th>
+              <th scope="col">Implantação</th><th scope="col">Situação do curso</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for c in cursos %}
+            <tr data-centro="{{ c.centro }}" data-status="{{ c.status }}" data-ativo="{{ 1 if c.ativo else 0 }}" data-busca="{{ (c.curso ~ ' ' ~ c.emec)|lower }}"{% if not c.ativo %} class="inativo"{% endif %}>
+              <td>{{ c.centro }}</td>
+              <td>{{ c.curso }}</td>
+              <td>{{ c.tipo }}</td>
+              <td>{{ c.sede }}</td>
+              <td>{{ c.modalidade }}</td>
+              <td>{{ c.turnos }}</td>
+              <td>{{ c.emec }}</td>
+              <td><span class="selo"><i class="marca" style="background: {{ cores.get(c.status, '#888') }}"></i>{{ c.status_rotulo }}</span></td>
+              <td>{% if c.ativo %}{{ c.situacao }}{% else %}<span class="aviso">{{ c.situacao }}</span>{% endif %}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="rodape">
+  <div class="rodape-interno">
+    <div>
+      <h2>Contato</h2>
+      <p><a href="mailto:{{ contato.email }}">{{ contato.email }}</a></p>
+      <p>Ramal: {{ contato.ramal }}</p>
+      <p class="fonte">Pró-Reitoria de Extensão — Universidade Federal da Paraíba</p>
+    </div>
+    <div>
+      <h2>Equipe</h2>
+      <ul>
+        {% for nome, cargo in equipe %}<li><strong>{{ nome }}</strong><span>{{ cargo }}</span></li>{% endfor %}
+      </ul>
+    </div>
+  </div>
+</footer>
+</body>
+</html>
