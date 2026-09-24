@@ -40,8 +40,10 @@ main { max-width: 1120px; margin: 0 auto; padding: 8px 16px 40px; }
 h1 { margin: 0; color: var(--azul); font-size: clamp(1.7rem, 4.5vw, 2.6rem); line-height: 1.1; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; }
 h1 span { display: block; margin-top: 6px; color: var(--texto); font-size: 0.55em; font-weight: 500; letter-spacing: 0.08em; }
 .lead { margin: 14px 0 0; color: var(--texto-2); max-width: 70ch; }
-.filtro-centro { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 18px 0 0; }
-.filtro-rotulo { font-weight: 600; color: var(--azul); margin-right: 4px; }
+.filtro-centro { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 18px 0 0; }
+.filtro-centro label { font-weight: 600; color: var(--azul); }
+.filtro-centro select { min-width: 220px; }
+.chips-reserva { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip { padding: 4px 12px; border: 1px solid #b9bdd6; border-radius: 999px; background: #fff; color: var(--azul); text-decoration: none; font-size: 0.9rem; font-weight: 500; }
 .chip:hover { background: #eceefa; }
 .chip.ativo { background: var(--azul); border-color: var(--azul); color: #fff; }

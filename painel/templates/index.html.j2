@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="{{ raiz }}estilo.css">
 <script src="{{ raiz }}plotly.min.js"></script>
 <script src="{{ raiz }}tabela.js" defer></script>
+<script src="{{ raiz }}filtro-centro.js" defer></script>
 </head>
 <body>
 <a class="pular" href="#conteudo">Ir para o conteúdo</a>
@@ -29,12 +30,17 @@
     <p class="atualizacao">Dados atualizados em {{ atualizado_em }}</p>
   </section>
 
-  <nav class="filtro-centro" aria-label="Filtrar por Centro">
-    <span class="filtro-rotulo">Centro</span>
-    <a class="chip{% if not centro_atual %} ativo{% endif %}" href="{{ raiz }}index.html"{% if not centro_atual %} aria-current="page"{% endif %}>Todos</a>
-    {% for c in todos_centros %}<a class="chip{% if c.nome == centro_atual %} ativo{% endif %}" href="{{ raiz }}centro/{{ c.slug }}.html"{% if c.nome == centro_atual %} aria-current="page"{% endif %}>{{ c.nome }}</a>
-    {% endfor %}
-  </nav>
+  <div class="filtro-centro">
+    <label for="filtro-centro">Centro</label>
+    <select id="filtro-centro" autocomplete="off" data-filtrado="{{ 1 if centro_atual else 0 }}" data-inicio="{{ raiz }}index.html">
+      <option value="{{ raiz }}index.html"{% if not centro_atual %} selected{% endif %}>Todos</option>
+      {% for c in todos_centros %}<option value="{{ raiz }}centro/{{ c.slug }}.html"{% if c.nome == centro_atual %} selected{% endif %}>{{ c.nome }}</option>
+      {% endfor %}
+    </select>
+    <noscript>
+      <span class="chips-reserva">{% for c in todos_centros %}<a class="chip{% if c.nome == centro_atual %} ativo{% endif %}" href="{{ raiz }}centro/{{ c.slug }}.html">{{ c.nome }}</a> {% endfor %}<a class="chip" href="{{ raiz }}index.html">Todos</a></span>
+    </noscript>
+  </div>
 
   <section aria-labelledby="t-resumo">
     <h2 id="t-resumo">Visão geral</h2>

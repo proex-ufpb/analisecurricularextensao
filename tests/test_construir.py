@@ -36,18 +36,34 @@ def test_paginas_por_centro_dividem_os_131_cursos(site):
     assert geral == soma == 131
 
 
-def test_barra_de_centros_marca_a_pagina_atual(site):
+def opcoes_do_menu(html):
+    menu = re.search(r'<select id="filtro-centro"[^>]*>(.*?)</select>', html, re.S).group(1)
+    return re.findall(r'<option value="([^"]+)"( selected)?>([^<]+)</option>', menu)
+
+
+def test_menu_de_centros_marca_a_pagina_atual(site):
     html = (site / "centro" / "ccs.html").read_text(encoding="utf-8")
-    ativos = re.findall(r'<a class="chip ativo" href="([^"]+)"', html)
-    assert ativos == ["../centro/ccs.html"]
-    assert html.count('class="chip') == 1 + len(list((site / "centro").glob("*.html")))
-    assert 'href="../estilo.css"' in html and 'src="../plotly.min.js"' in html
+    opcoes = opcoes_do_menu(html)
+    assert len(opcoes) == 1 + len(list((site / "centro").glob("*.html")))
+    assert opcoes[0][0] == "../index.html" and opcoes[0][2] == "Todos"
+    assert [o[0] for o in opcoes if o[1]] == ["../centro/ccs.html"]
+    assert 'data-filtrado="1"' in html and 'data-inicio="../index.html"' in html
+    assert 'autocomplete="off"' in html
+    assert 'href="../estilo.css"' in html and 'src="../plotly.min.js"' in html and 'src="../filtro-centro.js"' in html
 
 
-def test_pagina_geral_marca_todos_e_usa_caminhos_da_raiz(site):
+def test_pagina_geral_abre_em_todos(site):
     html = (site / "index.html").read_text(encoding="utf-8")
-    assert re.findall(r'<a class="chip ativo" href="([^"]+)"', html) == ["index.html"]
+    opcoes = opcoes_do_menu(html)
+    assert [o[0] for o in opcoes if o[1]] == ["index.html"]
+    assert 'data-filtrado="0"' in html
     assert 'href="estilo.css"' in html
+
+
+def test_menu_tem_links_de_reserva_sem_javascript(site):
+    html = (site / "index.html").read_text(encoding="utf-8")
+    reserva = re.search(r"<noscript>(.*?)</noscript>", html, re.S).group(1)
+    assert reserva.count('<a class="chip') == 1 + len(list((site / "centro").glob("*.html")))
 
 
 def test_centro_sem_curso_com_percentual_mostra_aviso_em_vez_de_grafico(site):
