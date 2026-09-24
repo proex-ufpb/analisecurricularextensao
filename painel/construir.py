@@ -135,10 +135,10 @@ def grafico_componentes_por_centro(tabela):
 
 
 def grafico_exigencia_oferta(tabela):
-    """Média por Centro do % que o aluno integraliza e do % que o curso oferta, com a faixa de 10% a 15%."""
+    """Colunas por Centro: média do % que o aluno integraliza e do % que o curso oferta, com a faixa de 10% a 15%."""
     centros = list(tabela.index)
     fig = go.Figure()
-    fig.add_vrect(x0=LIMITE_MINIMO * 100, x1=LIMITE_MAXIMO * 100, fillcolor="#2E9E4F", opacity=0.12,
+    fig.add_hrect(y0=LIMITE_MINIMO * 100, y1=LIMITE_MAXIMO * 100, fillcolor="#2E9E4F", opacity=0.12,
                   line_width=0, layer="below")
     series = (
         ("EXIGIDO", "A integralizar (exigido do aluno)"),
@@ -146,35 +146,35 @@ def grafico_exigencia_oferta(tabela):
     )
     for chave, nome in series:
         fig.add_bar(
-            y=centros,
-            x=tabela[chave],
-            orientation="h",
+            x=centros,
+            y=tabela[chave],
             name=nome,
             marker=dict(color=CORES_OFERTA[chave], line=dict(color="#FFFFFF", width=1)),
-            text=[f"{v:.1f}%".replace(".", ",") for v in tabela[chave]],
+            text=[f"{v:.1f}".replace(".", ",") for v in tabela[chave]],
             textposition="outside",
+            textangle=-90,
             cliponaxis=False,
             textfont=dict(size=11, color="#15163A"),
             customdata=tabela["CURSOS"],
-            hovertemplate="<b>%{y}</b><br>" + nome + ": %{x:.2f}% (média de %{customdata} curso(s))<extra></extra>",
+            hovertemplate="<b>%{x}</b><br>" + nome + ": %{y:.2f}% (média de %{customdata} curso(s))<extra></extra>",
         )
-    fig.add_annotation(x=(LIMITE_MINIMO + LIMITE_MAXIMO) / 2 * 100, y=1.0, yref="paper", xanchor="center",
-                       yanchor="bottom", showarrow=False, text="Faixa UFPB para o que o aluno integraliza: 10% a 15%",
-                       font=dict(color="#1E6B36", size=12), yshift=4)
+    fig.add_annotation(x=0, y=1.0, xref="paper", yref="paper", xanchor="left", yanchor="bottom", showarrow=False,
+                       text="Faixa UFPB para o que o aluno integraliza: 10% a 15%",
+                       font=dict(color="#1E6B36", size=12), yshift=6)
     fig.update_layout(
         barmode="group",
         bargap=0.25,
-        height=max(360, 46 * len(centros) + 150),
-        margin=dict(l=8, r=40, t=40, b=8),
+        height=420,
+        margin=dict(l=8, r=8, t=44, b=8),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         font=dict(family=FONTE, size=13, color="#15163A"),
         separators=",.",
         legend=dict(orientation="v", yanchor="top", y=1, xanchor="right", x=1, title_text="", traceorder="normal",
                     bgcolor="rgba(255,255,255,0.9)", bordercolor="#DDE0EE", borderwidth=1),
-        xaxis=dict(title="Média dos cursos do Centro", ticksuffix="%", range=[0, 36], dtick=5, gridcolor="#E6E8F2",
+        xaxis=dict(title="Centro", type="category", gridcolor="#E6E8F2"),
+        yaxis=dict(title="Média dos cursos do Centro", ticksuffix="%", range=[0, 26], dtick=5, gridcolor="#E6E8F2",
                    zeroline=False),
-        yaxis=dict(autorange="reversed", automargin=True, title=""),
         hoverlabel=dict(font=dict(family=FONTE)),
     )
     return _html(fig)
