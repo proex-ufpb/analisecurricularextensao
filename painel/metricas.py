@@ -276,19 +276,18 @@ def linhas_oferta(base):
 COLUNA_UCE_QTDE = "QTDE_UCE"
 COLUNA_UCE_HORAS = "CH_UCE"
 COLUNA_UCE_CREDITOS = "CREDITO_UCE"
-ROTULOS_UCE = {"COM_UCE": "Com UCE", "SEM_UCE": "Sem UCE", "SEM_INFO": "Não informado"}
+ROTULOS_UCE = {"COM_UCE": "Com UCE", "SEM_UCE": "Sem UCE"}
 
 
 def _classe_uce(qtde, horas):
-    if pd.isna(qtde) and pd.isna(horas):
-        return "SEM_INFO"
-    if (0 if pd.isna(qtde) else qtde) > 0 or (0 if pd.isna(horas) else horas) > 0:
+    """Campo vazio na planilha conta como sem UCE."""
+    if _numero(qtde) > 0 or _numero(horas) > 0:
         return "COM_UCE"
     return "SEM_UCE"
 
 
 def com_uce(base):
-    """Classifica cada curso: com UCE, sem UCE (informado zero) ou sem informação na planilha."""
+    """Classifica cada curso em com UCE ou sem UCE (inclui os campos vazios da planilha)."""
     classes = [_classe_uce(q, h) for q, h in zip(base[COLUNA_UCE_QTDE], base[COLUNA_UCE_HORAS])]
     return base.assign(UCE_CLASSE=classes)
 
@@ -324,28 +323,25 @@ def uce_por_centro(base):
     return tabela.sort_values(["UCES", "_centro"], ascending=[False, True]).drop(columns="_centro")
 
 
-def _formatar_uce(valor, sem_info):
-    if sem_info:
-        return "—"
+def _formatar_uce(valor):
     numero = _numero(valor)
     return "0" if numero == 0 else formatar_horas(numero)
 
 
 def linhas_uce(base):
-    """Um curso por linha, do que tem mais UCEs para o que tem menos; sem informação por último."""
+    """Um curso por linha, do que tem mais UCEs para o que tem menos."""
     base = com_uce(base)
-    base = base.assign(_qtde=base[COLUNA_UCE_QTDE].fillna(-1))
+    base = base.assign(_qtde=base[COLUNA_UCE_QTDE].fillna(0))
     ordenados = base.sort_values(["_qtde", "CENTRO", "CURSO"], ascending=[False, True, True], kind="stable")
     linhas = []
     for _, c in ordenados.iterrows():
-        sem_info = c["UCE_CLASSE"] == "SEM_INFO"
         linhas.append({
             "centro": c["CENTRO"],
             "curso": formatar_nome(c["CURSO"]),
             "emec": c["CÓDIGO E-MEC"] or "Não informado",
-            "qtde": _formatar_uce(c[COLUNA_UCE_QTDE], sem_info),
-            "horas": _formatar_uce(c[COLUNA_UCE_HORAS], sem_info),
-            "creditos": _formatar_uce(c[COLUNA_UCE_CREDITOS], sem_info),
+            "qtde": _formatar_uce(c[COLUNA_UCE_QTDE]),
+            "horas": _formatar_uce(c[COLUNA_UCE_HORAS]),
+            "creditos": _formatar_uce(c[COLUNA_UCE_CREDITOS]),
             "situacao": ROTULOS_UCE[c["UCE_CLASSE"]],
         })
     return linhas

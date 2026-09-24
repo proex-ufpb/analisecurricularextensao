@@ -195,15 +195,14 @@ def frame_uce(*linhas):
 
 def test_classificacao_de_uce():
     base = com_uce(frame_uce((2, 120.0), (float("nan"), 60.0), (3, float("nan")), (0, 0.0), (float("nan"), float("nan"))))
-    assert list(base["UCE_CLASSE"]) == ["COM_UCE", "COM_UCE", "COM_UCE", "SEM_UCE", "SEM_INFO"]
+    assert list(base["UCE_CLASSE"]) == ["COM_UCE", "COM_UCE", "COM_UCE", "SEM_UCE", "SEM_UCE"]
 
 
-def test_linhas_uce_sem_informacao_usa_traco_e_fica_por_ultimo():
+def test_linhas_uce_campo_vazio_conta_como_sem_uce():
     linhas = linhas_uce(frame_uce((float("nan"), float("nan")), (0, 0.0), (4, 60.0)))
-    assert [l["situacao"] for l in linhas] == ["Com UCE", "Sem UCE", "Não informado"]
+    assert [l["situacao"] for l in linhas] == ["Com UCE", "Sem UCE", "Sem UCE"]
     assert (linhas[0]["qtde"], linhas[0]["horas"], linhas[0]["creditos"]) == ("4", "60", "4")
-    assert (linhas[1]["qtde"], linhas[1]["horas"]) == ("0", "0")
-    assert (linhas[2]["qtde"], linhas[2]["horas"], linhas[2]["creditos"]) == ("—", "—", "—")
+    assert all((l["qtde"], l["horas"], l["creditos"]) == ("0", "0", "0") for l in linhas[1:])
 
 
 def test_base_das_analises_so_tem_cursos_com_percentual_maior_que_zero():
@@ -226,7 +225,7 @@ def test_uce_da_base_real():
     resumo = resumo_uce(base)
     assert (resumo["total"], resumo["com_uce"], resumo["qtde"]) == (42, 23, "70")
     classes = com_uce(base)["UCE_CLASSE"].value_counts().to_dict()
-    assert classes == {"COM_UCE": 23, "SEM_INFO": 16, "SEM_UCE": 3}
+    assert classes == {"COM_UCE": 23, "SEM_UCE": 19}
 
 
 def test_uce_por_centro_preserva_totais():
