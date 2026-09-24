@@ -171,6 +171,75 @@
     </div>
   </section>
 
+  <section aria-labelledby="t-uce">
+    <h2 id="t-uce">Unidades Curriculares de Extensão (UCE)</h2>
+    <div class="cartoes">
+      <div class="cartao cartao-total">
+        <span class="numero">{{ uce.com_uce }}</span>
+        <span class="rotulo">de {{ uce.total }} cursos com percentual de extensão têm UCE</span>
+      </div>
+      <div class="cartao">
+        <span class="rotulo"><i class="marca" style="background: {{ cor_uce }}"></i>UCEs</span>
+        <span class="numero">{{ uce.qtde }}</span>
+        <span class="percentual">unidades curriculares de extensão</span>
+      </div>
+      <div class="cartao">
+        <span class="rotulo">Carga horária das UCEs</span>
+        <span class="numero">{{ uce.horas }} h</span>
+        <span class="percentual">média de {{ uce.media_horas }} h por curso com UCE</span>
+      </div>
+      <div class="cartao">
+        <span class="rotulo">Créditos das UCEs</span>
+        <span class="numero">{{ uce.creditos }}</span>
+        <span class="percentual">créditos em UCE</span>
+      </div>
+      <div class="cartao">
+        <span class="rotulo">Sem informação de UCE</span>
+        <span class="numero">{{ uce.sem_info }}</span>
+        <span class="percentual">curso(s) sem UCE informada na planilha{% if uce.sem_uce %}; {{ uce.sem_uce }} com UCE zero{% endif %}</span>
+      </div>
+    </div>
+
+    <h3>UCEs por centro</h3>
+    <div class="cartao-grande">
+      {{ grafico_uce|safe }}
+      <details class="tabela-dados">
+        <summary>Ver os dados do gráfico em tabela</summary>
+        <div class="filtros filtros-duplos">
+          <label>Buscar curso
+            <input type="search" id="u-busca" placeholder="Nome do curso ou código e-MEC">
+          </label>
+          <label>Centro
+            <select id="u-centro">
+              <option value="">Todos</option>
+              {% for c in centros %}<option>{{ c }}</option>{% endfor %}
+            </select>
+          </label>
+        </div>
+        <p class="contagem" aria-live="polite"><span id="contagem-uce">{{ linhas_uce|length }}</span> de {{ linhas_uce|length }} cursos</p>
+        <div class="rolagem rolagem-alta">
+          <table id="tabela-uce">
+            <thead>
+              <tr>
+                <th scope="col">Centro</th><th scope="col">Curso</th><th scope="col">Código e-MEC</th>
+                <th scope="col" class="num">UCEs</th><th scope="col" class="num">Carga horária (h)</th>
+                <th scope="col" class="num">Créditos</th><th scope="col">Situação</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for c in linhas_uce %}
+              <tr data-centro="{{ c.centro }}" data-busca="{{ (c.curso ~ ' ' ~ c.emec)|lower }}">
+                <td>{{ c.centro }}</td><td>{{ c.curso }}</td><td>{{ c.emec }}</td>
+                <td class="num">{{ c.qtde }}</td><td class="num">{{ c.horas }}</td><td class="num">{{ c.creditos }}</td><td>{{ c.situacao }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </div>
+  </section>
+
   <section aria-labelledby="t-cursos">
     <h2 id="t-cursos">Cursos</h2>
     <div class="cartao-grande">

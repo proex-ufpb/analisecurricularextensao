@@ -271,3 +271,88 @@ def linhas_oferta(base):
         }
         for _, c in ordenados.iterrows()
     ]
+
+
+COLUNA_UCE_QTDE = "QTDE_UCE"
+COLUNA_UCE_HORAS = "CH_UCE"
+COLUNA_UCE_CREDITOS = "CREDITO_UCE"
+ROTULOS_UCE = {"COM_UCE": "Com UCE", "SEM_UCE": "Sem UCE", "SEM_INFO": "Não informado"}
+
+
+def _classe_uce(qtde, horas):
+    if pd.isna(qtde) and pd.isna(horas):
+        return "SEM_INFO"
+    if (0 if pd.isna(qtde) else qtde) > 0 or (0 if pd.isna(horas) else horas) > 0:
+        return "COM_UCE"
+    return "SEM_UCE"
+
+
+def com_uce(base):
+    """Classifica cada curso: com UCE, sem UCE (informado zero) ou sem informação na planilha."""
+    classes = [_classe_uce(q, h) for q, h in zip(base[COLUNA_UCE_QTDE], base[COLUNA_UCE_HORAS])]
+    return base.assign(UCE_CLASSE=classes)
+
+
+def _numero(valor):
+    return 0 if pd.isna(valor) else valor
+
+
+def _total(serie):
+    soma = serie.fillna(0).sum()
+    return "0" if soma == 0 else formatar_horas(soma)
+
+
+def resumo_uce(base):
+    base = com_uce(base)
+    contagem = base["UCE_CLASSE"].value_counts()
+    com = base[base["UCE_CLASSE"] == "COM_UCE"]
+    return {
+        "total": len(base),
+        "com_uce": int(contagem.get("COM_UCE", 0)),
+        "sem_uce": int(contagem.get("SEM_UCE", 0)),
+        "sem_info": int(contagem.get("SEM_INFO", 0)),
+        "qtde": _total(base[COLUNA_UCE_QTDE]),
+        "horas": _total(base[COLUNA_UCE_HORAS]),
+        "creditos": _total(base[COLUNA_UCE_CREDITOS]),
+        "media_horas": formatar_horas(round(com[COLUNA_UCE_HORAS].fillna(0).mean())) if len(com) else "—",
+    }
+
+
+def uce_por_centro(base):
+    base = com_uce(base)
+    tabela = base.groupby("CENTRO").agg(
+        UCES=(COLUNA_UCE_QTDE, lambda s: s.fillna(0).sum()),
+        HORAS=(COLUNA_UCE_HORAS, lambda s: s.fillna(0).sum()),
+        CREDITOS=(COLUNA_UCE_CREDITOS, lambda s: s.fillna(0).sum()),
+        CURSOS=("CURSO", "count"),
+    )
+    tabela["COM_UCE"] = base[base["UCE_CLASSE"] == "COM_UCE"].groupby("CENTRO")["CURSO"].count().reindex(tabela.index).fillna(0).astype(int)
+    tabela["_centro"] = tabela.index
+    return tabela.sort_values(["UCES", "_centro"], ascending=[False, True]).drop(columns="_centro")
+
+
+def _formatar_uce(valor, sem_info):
+    if sem_info:
+        return "—"
+    numero = _numero(valor)
+    return "0" if numero == 0 else formatar_horas(numero)
+
+
+def linhas_uce(base):
+    """Um curso por linha, do que tem mais UCEs para o que tem menos; sem informação por último."""
+    base = com_uce(base)
+    base = base.assign(_qtde=base[COLUNA_UCE_QTDE].fillna(-1))
+    ordenados = base.sort_values(["_qtde", "CENTRO", "CURSO"], ascending=[False, True, True], kind="stable")
+    linhas = []
+    for _, c in ordenados.iterrows():
+        sem_info = c["UCE_CLASSE"] == "SEM_INFO"
+        linhas.append({
+            "centro": c["CENTRO"],
+            "curso": formatar_nome(c["CURSO"]),
+            "emec": c["CÓDIGO E-MEC"] or "Não informado",
+            "qtde": _formatar_uce(c[COLUNA_UCE_QTDE], sem_info),
+            "horas": _formatar_uce(c[COLUNA_UCE_HORAS], sem_info),
+            "creditos": _formatar_uce(c[COLUNA_UCE_CREDITOS], sem_info),
+            "situacao": ROTULOS_UCE[c["UCE_CLASSE"]],
+        })
+    return linhas

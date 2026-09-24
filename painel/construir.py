@@ -18,10 +18,13 @@ from painel.metricas import (
     cursos_com_extensao,
     linhas_componentes,
     linhas_oferta,
+    linhas_uce,
     linhas_tabela,
     oferta_por_centro,
+    uce_por_centro,
     resumo_componentes,
     resumo_oferta,
+    resumo_uce,
     resumo_status,
     status_por_centro,
 )
@@ -31,6 +34,7 @@ from painel.tema import (
     COR_TEXTO_COMPONENTES,
     COR_TEXTO_NA_BARRA,
     CORES_COMPONENTES,
+    COR_UCE,
     CORES_OFERTA,
     CORES_STATUS,
     EQUIPE,
@@ -172,6 +176,39 @@ def grafico_exigencia_oferta(tabela):
     return _html(fig)
 
 
+def grafico_uce_por_centro(tabela):
+    centros = list(tabela.index)
+    fig = go.Figure()
+    fig.add_bar(
+        y=centros,
+        x=tabela["UCES"],
+        orientation="h",
+        marker=dict(color=COR_UCE, line=dict(color="#FFFFFF", width=1)),
+        text=[f"{v:.0f}" for v in tabela["UCES"]],
+        textposition="outside",
+        cliponaxis=False,
+        textfont=dict(size=12, color="#15163A"),
+        customdata=list(zip(tabela["COM_UCE"], tabela["CURSOS"], tabela["HORAS"], tabela["CREDITOS"])),
+        hovertemplate=(
+            "<b>%{y}</b><br>%{x:.0f} UCE(s)<br>%{customdata[0]} de %{customdata[1]} curso(s) com UCE"
+            "<br>%{customdata[2]:.0f} h e %{customdata[3]:.1f} créditos<extra></extra>"
+        ),
+    )
+    fig.update_layout(
+        height=max(320, 34 * len(centros) + 90),
+        margin=dict(l=8, r=40, t=8, b=8),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(family=FONTE, size=13, color="#15163A"),
+        separators=",.",
+        showlegend=False,
+        xaxis=dict(title="Quantidade de UCEs", gridcolor="#E6E8F2", zeroline=False, rangemode="tozero"),
+        yaxis=dict(autorange="reversed", automargin=True, title=""),
+        hoverlabel=dict(font=dict(family=FONTE)),
+    )
+    return _html(fig)
+
+
 def construir(csv=CSV_PADRAO, saida=SAIDA):
     linhas = carregar_linhas(csv)
     cursos = com_meta(cursos_unicos(linhas))
@@ -215,6 +252,10 @@ def construir(csv=CSV_PADRAO, saida=SAIDA):
         grafico_componentes=grafico_componentes_por_centro(componentes_por_centro(base_extensao)),
         linhas_componentes=linhas_componentes(base_extensao),
         oferta=oferta,
+        uce=resumo_uce(base_extensao),
+        cor_uce=COR_UCE,
+        grafico_uce=grafico_uce_por_centro(uce_por_centro(base_extensao)),
+        linhas_uce=linhas_uce(base_extensao),
         cores_oferta=CORES_OFERTA,
         grafico_oferta=grafico_exigencia_oferta(oferta_por_centro(base_extensao)),
         linhas_oferta=linhas_oferta(base_extensao),

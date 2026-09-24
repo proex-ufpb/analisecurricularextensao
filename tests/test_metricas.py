@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import pandas as pd
 import pytest
 
 from painel.dados import carregar_linhas, cursos_ativos, cursos_unicos
@@ -11,7 +12,11 @@ from painel.metricas import (
     cursos_com_extensao,
     formatar_horas,
     formatar_nome,
+    com_uce,
     formatar_pp,
+    linhas_uce,
+    resumo_uce,
+    uce_por_centro,
     formatar_processo,
     formatar_resolucao,
     linhas_tabela,
@@ -179,3 +184,54 @@ def test_processo_e_resolucao_da_base_real():
     economicas = next(l for l in linhas.values() if l["curso"] == "Ciências Econômicas" and l["emec"] == "13394")
     assert economicas["processo"] == "23074.028746/2023-16" and economicas["resolucao"] == "42/2025"
     assert all(set(l) >= {"processo", "resolucao"} for l in linhas.values())
+
+
+def frame_uce(*linhas):
+    return pd.DataFrame([
+        {"CENTRO": "CT", "CURSO": f"C{i}", "CÓDIGO E-MEC": str(i), "QTDE_UCE": q, "CH_UCE": h, "CREDITO_UCE": h / 15 if h == h else 0.0}
+        for i, (q, h) in enumerate(linhas)
+    ])
+
+
+def test_classificacao_de_uce():
+    base = com_uce(frame_uce((2, 120.0), (float("nan"), 60.0), (3, float("nan")), (0, 0.0), (float("nan"), float("nan"))))
+    assert list(base["UCE_CLASSE"]) == ["COM_UCE", "COM_UCE", "COM_UCE", "SEM_UCE", "SEM_INFO"]
+
+
+def test_linhas_uce_sem_informacao_usa_traco_e_fica_por_ultimo():
+    linhas = linhas_uce(frame_uce((float("nan"), float("nan")), (0, 0.0), (4, 60.0)))
+    assert [l["situacao"] for l in linhas] == ["Com UCE", "Sem UCE", "Não informado"]
+    assert (linhas[0]["qtde"], linhas[0]["horas"], linhas[0]["creditos"]) == ("4", "60", "4")
+    assert (linhas[1]["qtde"], linhas[1]["horas"]) == ("0", "0")
+    assert (linhas[2]["qtde"], linhas[2]["horas"], linhas[2]["creditos"]) == ("—", "—", "—")
+
+
+def test_base_das_analises_so_tem_cursos_com_percentual_maior_que_zero():
+    ativos = pd.DataFrame({
+        "CENTRO": ["A", "A", "A"],
+        "CURSO": ["x", "y", "z"],
+        "% CH_INTEGRALIZADA_EXTENSAO": [0.10, 0.0, float("nan")],
+        "CH_BASICA_PROFISSIONAL_EXT": [100.0, 0.0, float("nan")],
+        "CH_COMPL_OBRIG_EXT": [float("nan")] * 3,
+        "CH_OPTATIVA_EXT": [float("nan")] * 3,
+        "CH_FLEXÍVEL_EXT": [float("nan")] * 3,
+        "CH_TOTAL_EXT": [100.0, 0.0, float("nan")],
+    })
+    base = cursos_com_extensao(com_meta(ativos))
+    assert list(base["CURSO"]) == ["x"]
+
+
+def test_uce_da_base_real():
+    resumo = resumo_uce(base_extensao())
+    assert resumo["total"] == 42
+    assert resumo["com_uce"] + resumo["sem_uce"] + resumo["sem_info"] == 42
+    assert (resumo["com_uce"], resumo["sem_uce"], resumo["sem_info"]) == (23, 3, 16)
+    assert (resumo["qtde"], resumo["horas"], resumo["creditos"]) == ("70", "4.095", "273")
+
+
+def test_uce_por_centro_preserva_totais():
+    base = base_extensao()
+    tabela = uce_por_centro(base)
+    assert tabela["UCES"].sum() == 70 and tabela["CURSOS"].sum() == 42
+    assert tabela["UCES"].is_monotonic_decreasing
+    assert tabela["COM_UCE"].sum() == 23
