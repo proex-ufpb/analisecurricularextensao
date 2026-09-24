@@ -17,7 +17,9 @@ from painel.metricas import (
     componentes_por_centro,
     cursos_com_extensao,
     linhas_componentes,
+    implantados_por_periodo,
     linhas_oferta,
+    linhas_periodo,
     linhas_uce,
     linhas_tabela,
     oferta_por_centro,
@@ -209,6 +211,33 @@ def grafico_uce_por_centro(tabela):
     return _html(fig)
 
 
+def grafico_implantados_por_periodo(periodos):
+    fig = go.Figure()
+    fig.add_bar(
+        x=[p["periodo"] for p in periodos],
+        y=[p["total"] for p in periodos],
+        marker=dict(color=CORES_STATUS["IMPLANTADO"], line=dict(color="#FFFFFF", width=1)),
+        text=[str(p["total"]) if p["total"] else "" for p in periodos],
+        textposition="outside",
+        cliponaxis=False,
+        textfont=dict(size=13, color="#15163A"),
+        hovertemplate="<b>PPC %{x}</b><br>%{y} curso(s) implantado(s)<extra></extra>",
+    )
+    fig.update_layout(
+        height=380,
+        margin=dict(l=8, r=8, t=24, b=8),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(family=FONTE, size=13, color="#15163A"),
+        showlegend=False,
+        bargap=0.3,
+        xaxis=dict(title="Período do PPC novo (ano.semestre)", type="category", gridcolor="#E6E8F2"),
+        yaxis=dict(title="Cursos implantados", gridcolor="#E6E8F2", zeroline=False, rangemode="tozero", dtick=2),
+        hoverlabel=dict(font=dict(family=FONTE)),
+    )
+    return _html(fig)
+
+
 def construir(csv=CSV_PADRAO, saida=SAIDA):
     linhas = carregar_linhas(csv)
     cursos = com_meta(cursos_unicos(linhas))
@@ -217,6 +246,7 @@ def construir(csv=CSV_PADRAO, saida=SAIDA):
     base_extensao = cursos_com_extensao(ativos)
     resumo_comp, total_horas = resumo_componentes(base_extensao)
     oferta = resumo_oferta(base_extensao)
+    periodos, sem_periodo = implantados_por_periodo(ativos)
 
     saida.mkdir(parents=True, exist_ok=True)
     (saida / "plotly.min.js").write_text(get_plotlyjs(), encoding="utf-8")
@@ -252,6 +282,10 @@ def construir(csv=CSV_PADRAO, saida=SAIDA):
         grafico_componentes=grafico_componentes_por_centro(componentes_por_centro(base_extensao)),
         linhas_componentes=linhas_componentes(base_extensao),
         oferta=oferta,
+        grafico_periodo=grafico_implantados_por_periodo(periodos),
+        periodos=periodos,
+        sem_periodo=sem_periodo,
+        linhas_periodo=linhas_periodo(ativos),
         uce=resumo_uce(base_extensao),
         cor_uce=COR_UCE,
         grafico_uce=grafico_uce_por_centro(uce_por_centro(base_extensao)),

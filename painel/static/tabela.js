@@ -27,6 +27,11 @@ document.addEventListener("DOMContentLoaded", () => {
     campos: { busca: "f-busca", centro: "f-centro", status: "f-status", ativo: "f-ativo" },
   });
   ligarFiltro({
+    tabela: "#tabela-periodo",
+    contagem: "contagem-periodo",
+    campos: { busca: "i-busca", centro: "i-centro", periodo: "i-periodo" },
+  });
+  ligarFiltro({
     tabela: "#tabela-oferta",
     contagem: "contagem-oferta",
     campos: { busca: "o-busca", centro: "o-centro" },

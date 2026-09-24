@@ -345,3 +345,44 @@ def linhas_uce(base):
             "situacao": ROTULOS_UCE[c["UCE_CLASSE"]],
         })
     return linhas
+
+
+PADRAO_PERIODO = re.compile(r"^(\d{4})\.([12])$")
+
+
+def _semestres_entre(primeiro, ultimo):
+    (ano_i, sem_i), (ano_f, sem_f) = primeiro, ultimo
+    periodos = []
+    for ano in range(ano_i, ano_f + 1):
+        for sem in (1, 2):
+            if (ano, sem) >= (ano_i, sem_i) and (ano, sem) <= (ano_f, sem_f):
+                periodos.append(f"{ano}.{sem}")
+    return periodos
+
+
+def implantados_por_periodo(ativos):
+    """Cursos ativos com STATUS Implantado por período (ano.semestre) do PPC novo, sem pular semestres."""
+    implantados = ativos[ativos["STATUS"] == "IMPLANTADO"]
+    validos = implantados[implantados["PPC_NOVO_PERIODO"].map(lambda p: bool(PADRAO_PERIODO.match(p)))]
+    contagem = validos["PPC_NOVO_PERIODO"].value_counts()
+    if contagem.empty:
+        return [], len(implantados)
+    chaves = sorted((int(a), int(b)) for a, b in (PADRAO_PERIODO.match(p).groups() for p in contagem.index))
+    periodos = _semestres_entre(chaves[0], chaves[-1])
+    return [{"periodo": p, "total": int(contagem.get(p, 0))} for p in periodos], len(implantados) - len(validos)
+
+
+def linhas_periodo(ativos):
+    """Cursos implantados com o período do PPC novo, do mais antigo para o mais recente."""
+    implantados = ativos[ativos["STATUS"] == "IMPLANTADO"]
+    ordenados = implantados.assign(_periodo=implantados["PPC_NOVO_PERIODO"].replace("", "9999.9")).sort_values(
+        ["_periodo", "CENTRO", "CURSO"], kind="stable")
+    return [
+        {
+            "centro": c["CENTRO"],
+            "curso": formatar_nome(c["CURSO"]),
+            "emec": c["CÓDIGO E-MEC"] or "Não informado",
+            "periodo": c["PPC_NOVO_PERIODO"] or "—",
+        }
+        for _, c in ordenados.iterrows()
+    ]

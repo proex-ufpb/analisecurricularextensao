@@ -3,7 +3,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from painel.dados import carregar_linhas, cursos_ativos, cursos_unicos
+from painel.dados import periodo_ppc, carregar_linhas, cursos_ativos, cursos_unicos
 from painel.metricas import (
     classificar_meta,
     com_meta,
@@ -14,6 +14,8 @@ from painel.metricas import (
     formatar_nome,
     com_uce,
     formatar_pp,
+    implantados_por_periodo,
+    linhas_periodo,
     linhas_uce,
     resumo_uce,
     uce_por_centro,
@@ -234,3 +236,54 @@ def test_uce_por_centro_preserva_totais():
     assert tabela["UCES"].sum() == 70 and tabela["CURSOS"].sum() == 42
     assert tabela["UCES"].is_monotonic_decreasing
     assert tabela["COM_UCE"].sum() == 23
+
+
+@pytest.mark.parametrize("valor,esperado", [
+    ("45658", "2025.1"),
+    ("45658.0", "2025.1"),
+    ("45323", "2024.2"),
+    ("45689", "2025.2"),
+    ("44197", "2021.1"),
+    ("2026.1", "2026.1"),
+    ("", ""),
+    ("  ", ""),
+])
+def test_periodo_ppc_converte_data_da_planilha_em_ano_semestre(valor, esperado):
+    assert periodo_ppc(valor) == esperado
+
+
+def frame_periodo(*linhas):
+    return pd.DataFrame([
+        {"CENTRO": "CT", "CURSO": f"C{i}", "CÓDIGO E-MEC": str(i), "STATUS": status, "PPC_NOVO_PERIODO": periodo}
+        for i, (status, periodo) in enumerate(linhas)
+    ])
+
+
+def test_implantados_por_periodo_nao_pula_semestres_e_ignora_outros_status():
+    ativos = frame_periodo(
+        ("IMPLANTADO", "2024.1"), ("IMPLANTADO", "2024.1"), ("IMPLANTADO", "2025.1"),
+        ("EM ANDAMENTO", "2023.1"), ("SEM PROCESSO", ""),
+    )
+    periodos, sem_periodo = implantados_por_periodo(ativos)
+    assert [(p["periodo"], p["total"]) for p in periodos] == [
+        ("2024.1", 2), ("2024.2", 0), ("2025.1", 1),
+    ]
+    assert sem_periodo == 0
+
+
+def test_implantado_sem_periodo_valido_e_contado_a_parte():
+    ativos = frame_periodo(("IMPLANTADO", "2024.1"), ("IMPLANTADO", ""), ("IMPLANTADO", "2024.3"))
+    periodos, sem_periodo = implantados_por_periodo(ativos)
+    assert sum(p["total"] for p in periodos) == 1
+    assert sem_periodo == 2
+
+
+def test_implantados_por_periodo_da_base_real():
+    _, ativos = base_real()
+    periodos, sem_periodo = implantados_por_periodo(ativos)
+    total = {p["periodo"]: p["total"] for p in periodos}
+    assert sem_periodo == 0 and sum(total.values()) == 37
+    assert total["2024.1"] == 7 and total["2024.2"] == 7 and total["2025.1"] == 7
+    assert list(total)[0] == "2021.1" and list(total)[-1] == "2027.1"
+    linhas = linhas_periodo(ativos)
+    assert len(linhas) == 37 and linhas[0]["periodo"] == "2021.1"

@@ -1,3 +1,5 @@
+import re
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import pandas as pd
@@ -10,6 +12,8 @@ SITUACAO_ATIVA = "EM ATIVIDADE"
 
 COLUNAS_TEXTO = CHAVE_CURSO + ["TURNO", "SITUAÇÃO", "STATUS"]
 COLUNAS_TEXTO_OPCIONAIS = ["PROCESSO", "RESOLUÇÃO"]
+COLUNA_PPC_NOVO = "PPC_ANO_NOVO"
+EPOCA_PLANILHA = datetime(1899, 12, 30)
 PREFIXOS_NUMERICOS = ("CH_", "CRÉDITO", "CREDITO", "%", "QTDE")
 
 
@@ -20,6 +24,19 @@ def _limpar_espacos(texto):
 def _limpar_emec(texto):
     limpo = _limpar_espacos(texto)
     return limpo[:-2] if limpo.endswith(".0") else limpo
+
+
+def periodo_ppc(valor):
+    """Converte o PPC_ANO_NOVO para 'ano.semestre'. A planilha guarda uma data formatada como yyyy.m (mês = semestre)."""
+    texto = _limpar_espacos(valor)
+    if not texto or re.fullmatch(r"\d{4}\.\d", texto):
+        return texto
+    try:
+        serial = float(texto)
+    except ValueError:
+        return texto
+    data = EPOCA_PLANILHA + timedelta(days=serial)
+    return f"{data.year}.{data.month}"
 
 
 def _rank_status(status):
@@ -36,6 +53,8 @@ def carregar_linhas(caminho=CSV_PADRAO):
     for coluna in COLUNAS_TEXTO_OPCIONAIS:
         if coluna in linhas.columns:
             linhas[coluna] = linhas[coluna].map(_limpar_espacos)
+    if COLUNA_PPC_NOVO in linhas.columns:
+        linhas["PPC_NOVO_PERIODO"] = linhas[COLUNA_PPC_NOVO].map(periodo_ppc)
     for coluna in linhas.columns:
         if coluna.startswith(PREFIXOS_NUMERICOS):
             linhas[coluna] = pd.to_numeric(linhas[coluna], errors="coerce")
@@ -55,6 +74,7 @@ def cursos_unicos(linhas):
         curso["CONFLITO_STATUS"] = grupo["STATUS"].nunique() > 1
         curso["CONFLITO_SITUACAO"] = grupo["SITUAÇÃO"].nunique() > 1
         curso["SEM_EMEC"] = chave[0] == ""
+        curso["PPC_NOVO_PERIODO"] = next((p for p in grupo["PPC_NOVO_PERIODO"] if p), "") if "PPC_NOVO_PERIODO" in grupo.columns else ""
         curso["PROCESSOS_LINHAS"] = list(grupo["PROCESSO"]) if "PROCESSO" in grupo.columns else []
         curso["RESOLUCOES_LINHAS"] = list(grupo["RESOLUÇÃO"]) if "RESOLUÇÃO" in grupo.columns else []
         registros.append(curso)

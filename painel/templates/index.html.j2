@@ -69,6 +69,49 @@
     </div>
   </section>
 
+  <section aria-labelledby="t-periodo">
+    <h2 id="t-periodo">Cursos implantados por período do PPC novo</h2>
+    <div class="cartao-grande">
+      {{ grafico_periodo|safe }}
+      {% if sem_periodo %}<p class="nota">{{ sem_periodo }} curso(s) implantado(s) sem período válido no PPC novo (não aparece(m) no gráfico).</p>{% endif %}
+      <details class="tabela-dados">
+        <summary>Ver os dados do gráfico em tabela</summary>
+        <div class="filtros filtros-duplos">
+          <label>Buscar curso
+            <input type="search" id="i-busca" placeholder="Nome do curso ou código e-MEC">
+          </label>
+          <label>Centro
+            <select id="i-centro">
+              <option value="">Todos</option>
+              {% for c in centros %}<option>{{ c }}</option>{% endfor %}
+            </select>
+          </label>
+          <label>Período do PPC novo
+            <select id="i-periodo">
+              <option value="">Todos</option>
+              {% for p in periodos if p.total %}<option>{{ p.periodo }}</option>{% endfor %}
+            </select>
+          </label>
+        </div>
+        <p class="contagem" aria-live="polite"><span id="contagem-periodo">{{ linhas_periodo|length }}</span> de {{ linhas_periodo|length }} cursos implantados</p>
+        <div class="rolagem rolagem-alta">
+          <table id="tabela-periodo">
+            <thead>
+              <tr><th scope="col">Centro</th><th scope="col">Curso</th><th scope="col">Código e-MEC</th><th scope="col">Período do PPC novo</th></tr>
+            </thead>
+            <tbody>
+              {% for c in linhas_periodo %}
+              <tr data-centro="{{ c.centro }}" data-periodo="{{ c.periodo }}" data-busca="{{ (c.curso ~ ' ' ~ c.emec)|lower }}">
+                <td>{{ c.centro }}</td><td>{{ c.curso }}</td><td>{{ c.emec }}</td><td>{{ c.periodo }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </div>
+  </section>
+
   <section aria-labelledby="t-oferta">
     <h2 id="t-oferta">Extensão ofertada pelo curso</h2>
     {% if oferta.menores %}<p class="nota">Atenção: {{ oferta.menores }} curso(s) aparecem com oferta menor que a exigência; vale conferir na planilha.</p>{% endif %}
