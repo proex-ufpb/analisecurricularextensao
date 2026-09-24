@@ -237,7 +237,7 @@ def grafico_implantados_por_periodo(periodos):
         font=dict(family=FONTE, size=13, color="#15163A"),
         showlegend=False,
         bargap=0.3,
-        xaxis=dict(title="Período do PPC novo (ano.semestre)", type="category", gridcolor="#E6E8F2"),
+        xaxis=dict(title="Ano e Semestre de implantação do PPC", type="category", gridcolor="#E6E8F2"),
         yaxis=dict(gridcolor="#E6E8F2", zeroline=False, rangemode="tozero", dtick=2),
         hoverlabel=dict(font=dict(family=FONTE)),
     )

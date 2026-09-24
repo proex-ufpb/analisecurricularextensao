@@ -1,3 +1,4 @@
+import json
 import re
 from pathlib import Path
 
@@ -169,3 +170,12 @@ def test_endereco_configurado_do_apps_script_aparece_na_pagina_da_equipe(site):
 
     assert URL_ENVIO_RELATORIO.startswith("https://script.google.com/macros/s/") and URL_ENVIO_RELATORIO.endswith("/exec")
     assert f'href="{URL_ENVIO_RELATORIO}"' in (site / "equipe.html").read_text(encoding="utf-8")
+
+
+def test_textos_da_secao_de_implantacao_por_semestre(site):
+    html = (site / "index.html").read_text(encoding="utf-8")
+    assert "Quantitativo de cursos com a inserção da extensão no currículo implantada por semestre" in html
+    eixo_x = json.dumps("Ano e Semestre de implantação do PPC")[1:-1]  # o Plotly grava os acentos do gráfico escapados
+    assert eixo_x in html
+    tabela = html[html.index('id="tabela-periodo"'):html.index("</table>", html.index('id="tabela-periodo"'))]
+    assert '<th scope="col">Ano.Semestre</th>' in tabela and "Período do PPC novo" not in html

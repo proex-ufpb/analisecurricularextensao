@@ -81,7 +81,7 @@
   </section>
 
   <section aria-labelledby="t-periodo">
-    <h2 id="t-periodo">Quantidade de cursos com inserção curricular da extensão por período</h2>
+    <h2 id="t-periodo">Quantitativo de cursos com a inserção da extensão no currículo implantada por semestre</h2>
     {% if grafico_periodo %}
     <div class="cartao-grande">
       {{ grafico_periodo|safe }}
@@ -98,7 +98,7 @@
               {% for c in centros %}<option>{{ c }}</option>{% endfor %}
             </select>
           </label>
-          <label>Período do PPC novo
+          <label>Ano.Semestre
             <select id="i-periodo">
               <option value="">Todos</option>
               {% for p in periodos if p.total %}<option>{{ p.periodo }}</option>{% endfor %}
@@ -109,7 +109,7 @@
         <div class="rolagem rolagem-alta">
           <table id="tabela-periodo">
             <thead>
-              <tr><th scope="col">Centro</th><th scope="col">Curso</th><th scope="col">Código e-MEC</th><th scope="col">Período do PPC novo</th></tr>
+              <tr><th scope="col">Centro</th><th scope="col">Curso</th><th scope="col">Código e-MEC</th><th scope="col">Ano.Semestre</th></tr>
             </thead>
             <tbody>
               {% for c in linhas_periodo %}
