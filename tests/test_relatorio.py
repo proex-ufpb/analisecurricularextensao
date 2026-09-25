@@ -61,6 +61,8 @@ def test_alertas_da_base_real(resultado):
     assert len(alertas["Status diferente entre turnos do mesmo curso"]) == 3
     assert len(alertas["Cursos sem código e-MEC"]) == 1
     assert "Oferta menor que a exigência" not in alertas
+    sem_modificacao = alertas["Implantados sem modificação curricular classificada"]
+    assert [(i["centro"], i["curso"]) for i in sem_modificacao] == [("CCHLA", "Tecnologia em Jogos Digitais"), ("CCTA", "Música Brasileira Popular")]
 
 
 def test_resumo_por_centro_soma_todas_as_acoes(resultado):

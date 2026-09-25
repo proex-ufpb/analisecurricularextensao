@@ -3,7 +3,9 @@
 from painel.dados import cursos_ativos
 from painel.metricas import (
     COLUNA_OFERTA,
+    COLUNA_MODIFICACAO,
     COLUNA_PERCENTUAL,
+    MODIFICACOES,
     LIMITE_MINIMO,
     TOLERANCIA,
     ROTULOS_STATUS,
@@ -68,6 +70,12 @@ def acoes_prioritarias(cursos):
         for _, c in por_status("IMPLANTADO").iterrows()
         if formatar_processo(c["PROCESSOS_LINHAS"])[:1] not in "0123456789"
     ]
+    sem_modificacao = [
+        _item(c, "Curso implantado sem classificação em M.CURRICULAR (Aumento, Manutenção, Redução ou Novo): "
+                 "não entra na seção de modificação da carga horária mínima do painel.")
+        for _, c in por_status("IMPLANTADO").iterrows()
+        if c[COLUNA_MODIFICACAO] not in MODIFICACOES
+    ]
     sem_emec = [_item(c, "Sem código e-MEC: não é possível agrupar turnos nem cruzar com outras bases.")
                 for _, c in ativos[ativos["SEM_EMEC"]].iterrows()]
     divergentes = [
@@ -88,6 +96,7 @@ def acoes_prioritarias(cursos):
     ]
     alertas = [
         {"titulo": "Implantados sem processo SIPAC válido", "itens": _ordenar(implantado_sem_processo)},
+        {"titulo": "Implantados sem modificação curricular classificada", "itens": _ordenar(sem_modificacao)},
         {"titulo": "Resolução CONSEPE pendente", "itens": _ordenar(resolucao_pendente)},
         {"titulo": "Status diferente entre turnos do mesmo curso", "itens": _ordenar(divergentes)},
         {"titulo": "Cursos sem código e-MEC", "itens": _ordenar(sem_emec)},
