@@ -17,7 +17,7 @@ Cópia dos dois arquivos do botão de envio (`Codigo.gs` e `Pagina.html`), sem d
 GitHub → Settings → Developer settings → Fine-grained tokens → **Generate new token**:
 - Repositório: apenas `proex-ufpb/analisecurricularextensao`.
 - Permissão: **Actions: Read and write** (nenhuma outra).
-- Validade: a que preferir (anote para renovar).
+- Validade: pode ser sem data de validade (evita o botão parar por vencimento). Nesse caso, revise o token uma vez por ano e gere outro se alguém com acesso sair. Se escolher uma data, anote-a para renovar.
 
 ## 3. Criar o aplicativo web
 

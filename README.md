@@ -58,14 +58,14 @@ GitHub Actions  ──►  exporta a planilha  ──►  data/analise_curricula
 ## 4. Rotina de manutenção
 
 ### O que conferir
-- **De vez em quando:** a aba *Actions* deve mostrar a execução diária em verde. Se estiver vermelha, abra o passo que falhou.
+- **De vez em quando:** a aba *Actions* deve mostrar a execução diária em verde. Em *Settings → Developer settings → Personal access tokens* da conta do repositório, o campo *Last used* do token do Apps Script mostra quando ele foi usado pela última vez. Se estiver vermelha, abra o passo que falhou.
 - **O GitHub pode desativar tarefas agendadas** de repositórios públicos sem atividade por cerca de 60 dias (como o CSV só muda quando a planilha muda, isso é possível). Se o painel parar de atualizar: *Actions → Atualizar dados e publicar painel* → se aparecer o aviso de desativado, clique em **Enable workflow**; depois **Run workflow** para atualizar na hora.
 
 ### O que expira ou precisa ser renovado
 
 | Item | Onde fica | Quando renovar |
 |---|---|---|
-| Token do GitHub usado pelo Apps Script (`GITHUB_TOKEN`) | Propriedades do script no Google | Na data de validade escolhida ao criá-lo. Vencido, o botão de envio dá erro 401. Permissão mínima: *Actions: Read and write*, só neste repositório. |
+| Token do GitHub usado pelo Apps Script (`GITHUB_TOKEN`) | Propriedades do script no Google | Foi criado **sem data de validade**, então não vence sozinho. Revise uma vez por ano e **gere outro se alguém com acesso ao Apps Script ou à conta sair** (apague o antigo). Se o botão de envio der erro 401, o token foi apagado ou revogado. Permissão mínima: *Actions: Read and write*, só neste repositório. |
 | Senha de app do Gmail remetente (`MAIL_PASSWORD`) | Segredo do GitHub | Se for revogada ou se a senha da conta mudar. Exige verificação em duas etapas. |
 | Chave da conta de serviço Google (`GOOGLE_SERVICE_ACCOUNT_JSON`) | Segredo do GitHub | Não expira sozinha; refazer se a chave for apagada no Google Cloud. A conta de serviço precisa ter a planilha compartilhada como **Leitor**. |
 | Lista de destinatários (`MAIL_TO`) | Segredo do GitHub | Quando a equipe mudar (e-mails separados por vírgula). |
