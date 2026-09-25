@@ -124,7 +124,7 @@
   </section>
 
   <section aria-labelledby="t-ppc">
-    <h2 id="t-ppc">Modificação curricular: PPC novo em relação ao PPC antigo</h2>
+    <h2 id="t-ppc">Modificação da carga horária mínima: PPC novo em relação ao PPC antigo</h2>
     {% if n_ppc %}
     <div class="cartoes">
       <div class="cartao cartao-total">
@@ -197,7 +197,7 @@
     {% if n_extensao %}
     {% if oferta.menores %}<p class="nota">Atenção: {{ oferta.menores }} curso(s) aparecem com oferta menor que a exigência; vale conferir na planilha.</p>{% endif %}
 
-    <h3>Média da exigência de integralização pelo aluno e da oferta de carga horária de extensão por {{ 'curso' if por_curso else 'Centro' }}</h3>
+    <h3>{% if por_curso %}Exigência de integralização do aluno e oferta de carga horária de extensão por curso{% else %}Média da exigência de integralização pelo aluno e da oferta de carga horária de extensão por Centro{% endif %}</h3>
     <div class="cartao-grande">
       {{ grafico_oferta|safe }}
       <details class="tabela-dados">
