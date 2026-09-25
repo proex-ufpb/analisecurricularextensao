@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; background: #f5f6fb; color: #15163a; margin: 0; padding: 24px; }
+    main { max-width: 520px; margin: 40px auto; background: #fff; border: 1px solid #dde0ee; border-radius: 12px; padding: 24px; }
+    h1 { color: #2d2e83; font-size: 1.3rem; margin-top: 0; }
+    button { background: #2d2e83; color: #fff; border: 0; border-radius: 8px; padding: 12px 20px; font-size: 1rem; cursor: pointer; }
+    button:disabled { opacity: .6; cursor: default; }
+    .aviso { color: #a3000c; }
+    #resultado { margin-top: 16px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Relatório de Ações Prioritárias</h1>
+    <? if (autorizado) { ?>
+      <p>Conectado como <strong><?= email ?></strong>. O relatório será gerado com os dados mais recentes da planilha e enviado por e-mail à equipe.</p>
+      <? if (ultimoEnvio) { ?><p>Último envio: <strong><?= ultimoEnvio ?></strong>.</p><? } ?>
+      <button id="enviar" onclick="enviar()">Enviar relatório</button>
+      <p id="resultado" role="status"></p>
+    <? } else { ?>
+      <p class="aviso">Acesso restrito. Entre com a conta autorizada da PROEX para enviar o relatório<?= email ? " (conta atual: " + email + ")" : "" ?>.</p>
+    <? } ?>
+  </main>
+  <script>
+    function enviar() {
+      if (!confirm("Enviar o relatório para toda a equipe agora?")) { return; }
+      var botao = document.getElementById("enviar");
+      var resultado = document.getElementById("resultado");
+      botao.disabled = true;
+      resultado.textContent = "Solicitando o envio...";
+      google.script.run
+        .withSuccessHandler(function (mensagem) { resultado.textContent = mensagem; })
+        .withFailureHandler(function (erro) { resultado.textContent = "Não foi possível enviar: " + erro.message; botao.disabled = false; })
+        .enviarRelatorio();
+    }
+  </script>
+</body>
+</html>
