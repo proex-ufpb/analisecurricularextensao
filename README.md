@@ -66,7 +66,7 @@ GitHub Actions  ──►  exporta a planilha  ──►  data/analise_curricula
 
 | Item | Onde fica | Quando renovar |
 |---|---|---|
-| Token do GitHub usado pelo Apps Script (`GITHUB_TOKEN`) | Propriedades do script no Google | Foi criado **sem data de validade**, então não vence sozinho. Revise uma vez por ano e **gere outro se alguém com acesso ao Apps Script ou à conta sair** (apague o antigo). Se o botão de envio der erro 401, o token foi apagado ou revogado. Permissão mínima: *Actions: Read and write*, só neste repositório. |
+| Token do GitHub usado pelo Apps Script (`GITHUB_TOKEN`) | Propriedades do script no Google | Foi criado **sem data de validade**, então não vence sozinho. A validade pode ser alterada a qualquer momento editando o token na página dos tokens do GitHub, **sem trocar o valor** guardado no Apps Script. Revise uma vez por ano e **gere outro se alguém com acesso ao Apps Script ou à conta sair** (apague o antigo). Se o botão de envio der erro 401, o token foi apagado ou revogado. Permissão mínima: *Actions: Read and write*, só neste repositório. |
 | Senha de app do Gmail remetente (`MAIL_PASSWORD`) | Segredo do GitHub | Se for revogada ou se a senha da conta mudar. Exige verificação em duas etapas. |
 | Chave da conta de serviço Google (`GOOGLE_SERVICE_ACCOUNT_JSON`) | Segredo do GitHub | Não expira sozinha; refazer se a chave for apagada no Google Cloud. A conta de serviço precisa ter a planilha compartilhada como **Leitor**. |
 | Lista de destinatários (`MAIL_TO`) | Segredo do GitHub | Quando a equipe mudar (e-mails separados por vírgula). |

@@ -17,7 +17,7 @@ Cópia dos dois arquivos do botão de envio (`Codigo.gs` e `Pagina.html`), sem d
 GitHub → Settings → Developer settings → Fine-grained tokens → **Generate new token**:
 - Repositório: apenas `proex-ufpb/analisecurricularextensao`.
 - Permissão: **Actions: Read and write** (nenhuma outra).
-- Validade: pode ser sem data de validade (evita o botão parar por vencimento). Nesse caso, revise o token uma vez por ano e gere outro se alguém com acesso sair. Se escolher uma data, anote-a para renovar.
+- Validade: pode ser sem data de validade (evita o botão parar por vencimento). Nesse caso, revise o token uma vez por ano e gere outro se alguém com acesso sair. Se escolher uma data, anote-a para renovar: a validade pode ser alterada depois, editando o token no GitHub, sem trocar o valor guardado no Apps Script.
 
 ## 3. Criar o aplicativo web
 
