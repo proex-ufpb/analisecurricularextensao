@@ -362,11 +362,13 @@ def _renderizar(ambiente, cursos, todos_centros, centro, raiz, atualizado_em):
         ativos = rotular_cursos(ativos)
     chave = "ROTULO" if por_curso else "CENTRO"
     por_centro = status_por_centro(ativos, chave)
-    base_extensao = cursos_com_extensao(ativos)
+    # Da seção de implantação por semestre em diante, os gráficos consideram só os cursos implantados.
+    implantados = ativos[ativos["STATUS"] == "IMPLANTADO"]
+    base_extensao = cursos_com_extensao(implantados)
     resumo_comp, total_horas = resumo_componentes(base_extensao)
     periodos, sem_periodo = implantados_por_periodo(ativos)
     tem_extensao = len(base_extensao) > 0
-    base_modificacao = base_ppc(ativos)
+    base_modificacao = base_ppc(implantados)
 
     return ambiente.get_template("index.html.j2").render(
         raiz=raiz,

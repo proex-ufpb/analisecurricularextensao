@@ -69,7 +69,7 @@ def test_menu_tem_links_de_reserva_sem_javascript(site):
 
 def test_centro_sem_curso_com_percentual_mostra_aviso_em_vez_de_grafico(site):
     html = (site / "centro" / "ccj.html").read_text(encoding="utf-8")
-    assert html.count("Nenhum curso deste Centro tem percentual de extensão.") == 3
+    assert html.count("Nenhum curso implantado deste Centro tem percentual de extensão.") == 3
     assert "plotly-graph-div" in html or 'class="selos"' in html
 
 
@@ -191,7 +191,7 @@ def linhas_da_tabela(html, tabela_id):
 def test_modificacao_curricular_das_paginas_por_centro_soma_a_da_pagina_geral(site):
     geral = linhas_da_tabela((site / "index.html").read_text(encoding="utf-8"), "tabela-ppc")
     soma = sum(linhas_da_tabela(p.read_text(encoding="utf-8"), "tabela-ppc") for p in (site / "centro").glob("*.html"))
-    assert geral == soma == 36
+    assert geral == soma == 35  # 36 cursos ativos com classificação, menos Engenharia Química (ainda não implantada)
 
 
 def test_centro_sem_modificacao_curricular_informada_mostra_aviso(site):
@@ -254,3 +254,15 @@ def test_graficos_por_curso_somam_o_mesmo_que_por_centro():
     assert status_por_centro(ativos, "ROTULO")["TOTAL"].sum() == status_por_centro(ativos)["TOTAL"].sum() == len(ativos)
     base = cursos_com_extensao(com_meta(ativos))
     assert uce_por_centro(base, "ROTULO")["UCES"].sum() == uce_por_centro(base)["UCES"].sum()
+
+
+def test_a_partir_da_secao_por_semestre_so_entram_cursos_implantados(site):
+    html = (site / "index.html").read_text(encoding="utf-8")
+    inicio = html.index('id="t-periodo"')
+    for tabela_id in ("tabela-ppc", "tabela-oferta", "tabela-componentes", "tabela-uce"):
+        if f'id="{tabela_id}"' not in html:
+            continue
+        i = html.index(f'id="{tabela_id}"')
+        assert i > inicio
+        assert "Engenharia Química" not in html[i:html.index("</table>", i)], tabela_id
+        assert "Hotelaria" not in html[i:html.index("</table>", i)], tabela_id
