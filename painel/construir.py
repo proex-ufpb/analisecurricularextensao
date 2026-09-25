@@ -1,5 +1,6 @@
 import re
 import shutil
+import textwrap
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -27,6 +28,7 @@ from painel.metricas import (
     linhas_periodo,
     linhas_ppc,
     linhas_uce,
+    rotular_cursos,
     linhas_tabela,
     modificacao_por_centro,
     oferta_por_centro,
@@ -61,12 +63,17 @@ FONTE = "Saira, sans-serif"
 CONFIG_GRAFICO = {"displayModeBar": False, "responsive": True}
 
 
+def _quebrar(nomes, largura=26):
+    """Quebra nomes longos de curso em linhas (<br>) para caberem no eixo, inclusive no celular."""
+    return ["<br>".join(textwrap.wrap(n, largura)) or n for n in nomes]
+
+
 def _html(fig):
     return fig.to_html(full_html=False, include_plotlyjs=False, config=CONFIG_GRAFICO)
 
 
-def _barras_por_centro(tabela, categorias, rotulos, cores, cores_texto, titulo_x):
-    centros = list(tabela.index)
+def _barras_por_centro(tabela, categorias, rotulos, cores, cores_texto, titulo_x, por_curso=False):
+    centros = _quebrar(tabela.index) if por_curso else list(tabela.index)
     fig = go.Figure()
     for categoria in categorias:
         valores = tabela[categoria]
@@ -82,39 +89,44 @@ def _barras_por_centro(tabela, categorias, rotulos, cores, cores_texto, titulo_x
             textfont=dict(color=cores_texto[categoria], size=13),
             customdata=(valores / tabela["TOTAL"] * 100).round(0),
             hovertemplate=(
-                "<b>%{y}</b><br>" + rotulos[categoria]
+                "<b>%{y}</b><br>" + rotulos[categoria] + "<extra></extra>"
+                if por_curso
+                else "<b>%{y}</b><br>" + rotulos[categoria]
                 + ": %{x} curso(s) (%{customdata:.0f}% do Centro)<extra></extra>"
             ),
         )
+    if por_curso:
+        fig.update_traces(text="")
     fig.update_layout(
         barmode="stack",
-        height=max(150, 34 * len(centros) + 110),
+        height=max(150, (42 if por_curso else 34) * len(centros) + (80 if por_curso else 110)),
         margin=dict(l=8, r=8, t=8, b=8),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         font=dict(family=FONTE, size=13, color="#15163A"),
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0, title_text="", traceorder="normal"),
-        xaxis=dict(title=titulo_x, gridcolor="#E6E8F2", zeroline=False, rangemode="tozero"),
+        xaxis=dict(visible=False, fixedrange=True) if por_curso
+        else dict(title=titulo_x, gridcolor="#E6E8F2", zeroline=False, rangemode="tozero"),
         yaxis=dict(autorange="reversed", automargin=True, title=""),
         hoverlabel=dict(font=dict(family=FONTE)),
     )
     return _html(fig)
 
 
-def grafico_status_por_centro(tabela):
+def grafico_status_por_centro(tabela, por_curso=False):
     return _barras_por_centro(
-        tabela, PRIORIDADE_STATUS, ROTULOS_STATUS, CORES_STATUS, COR_TEXTO_NA_BARRA, "Cursos ativos"
+        tabela, PRIORIDADE_STATUS, ROTULOS_STATUS, CORES_STATUS, COR_TEXTO_NA_BARRA, "Cursos ativos", por_curso
     )
 
 
-def grafico_modificacao_por_centro(tabela):
+def grafico_modificacao_por_centro(tabela, por_curso=False):
     return _barras_por_centro(
-        tabela, MODIFICACOES, ROTULOS_MODIFICACAO, CORES_MODIFICACAO, COR_TEXTO_MODIFICACAO, "Cursos ativos"
+        tabela, MODIFICACOES, ROTULOS_MODIFICACAO, CORES_MODIFICACAO, COR_TEXTO_MODIFICACAO, "Cursos ativos", por_curso
     )
 
 
-def grafico_componentes_por_centro(tabela):
-    centros = list(tabela.index)
+def grafico_componentes_por_centro(tabela, por_curso=False):
+    centros = _quebrar(tabela.index) if por_curso else list(tabela.index)
     fig = go.Figure()
     for chave in COMPONENTES:
         horas = tabela[chave]
@@ -132,27 +144,35 @@ def grafico_componentes_por_centro(tabela):
             customdata=horas,
             hovertemplate=(
                 "<b>%{y}</b><br>" + ROTULOS_COMPONENTES[chave]
-                + ": %{customdata:.0f} h (%{x:.0f}% da carga horária de extensão do Centro)<extra></extra>"
+                + ": %{customdata:.0f} h (%{x:.0f}% da carga horária de extensão do " + ("curso" if por_curso else "Centro")
+                + ")<extra></extra>"
             ),
         )
     fig.update_layout(
         barmode="stack",
-        height=max(320, 34 * len(centros) + 110),
-        margin=dict(l=8, r=8, t=8, b=8),
+        height=max(150, 42 * len(centros) + 130) if por_curso else max(320, 34 * len(centros) + 130),
+        margin=dict(l=8, r=8, t=8, b=84),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         font=dict(family=FONTE, size=13, color="#15163A"),
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0, title_text="", traceorder="normal"),
-        xaxis=dict(title="Participação na carga horária de extensão do Centro", ticksuffix="%", range=[0, 100],
-                   gridcolor="#E6E8F2", zeroline=False),
+        annotations=[dict(x=1, xref="paper", y=0, yref="paper", xanchor="right", yanchor="top", yshift=-32,
+                          showarrow=False, align="right",
+                          text="Participação na carga horária<br>de extensão do " + ("curso" if por_curso else "Centro"))],
+        xaxis=dict(ticksuffix="%", range=[0, 100], gridcolor="#E6E8F2", zeroline=False),
         yaxis=dict(autorange="reversed", automargin=True, title=""),
         hoverlabel=dict(font=dict(family=FONTE)),
     )
     return _html(fig)
 
 
-def grafico_exigencia_oferta(tabela):
-    """Colunas por Centro: média do % que o aluno integraliza e do % que o curso oferta, com a faixa de 10% a 15%."""
+def grafico_exigencia_oferta(tabela, por_curso=False):
+    """Colunas por Centro: média do % que o aluno integraliza e do % que o curso oferta, com a faixa de 10% a 15%.
+
+    Por curso, as barras ficam na horizontal para os nomes caberem.
+    """
+    if por_curso:
+        return _exigencia_oferta_por_curso(tabela)
     centros = list(tabela.index)
     fig = go.Figure()
     fig.add_hrect(y0=LIMITE_MINIMO * 100, y1=LIMITE_MAXIMO * 100, fillcolor="#2E9E4F", opacity=0.12,
@@ -175,10 +195,9 @@ def grafico_exigencia_oferta(tabela):
             customdata=tabela["CURSOS"],
             hovertemplate="<b>%{x}</b><br>" + nome + ": %{y:.2f}% (média de %{customdata} curso(s))<extra></extra>",
         )
-    fig.add_annotation(x=0, y=1.0, xref="paper", yref="paper", xanchor="left", yanchor="bottom", showarrow=False,
-                       text="Faixa UFPB para o que o aluno integraliza: 10% a 15%",
-                       font=dict(color="#1E6B36", size=12), yshift=6)
     fig.update_layout(
+        title=dict(text="Faixa UFPB para o que o aluno integraliza: 10% a 15%", x=0, xref="container",
+                   xanchor="left", y=0.99, yanchor="top", font=dict(color="#1E6B36", size=12)),
         barmode="group",
         bargap=0.25,
         uniformtext=dict(minsize=9, mode="hide"),
@@ -198,8 +217,49 @@ def grafico_exigencia_oferta(tabela):
     return _html(fig)
 
 
-def grafico_uce_por_centro(tabela):
-    centros = list(tabela.index)
+def _exigencia_oferta_por_curso(tabela):
+    cursos = _quebrar(tabela.index)
+    fig = go.Figure()
+    fig.add_vrect(x0=LIMITE_MINIMO * 100, x1=LIMITE_MAXIMO * 100, fillcolor="#2E9E4F", opacity=0.12,
+                  line_width=0, layer="below")
+    series = (
+        ("EXIGIDO", "A integralizar (exigido do aluno)"),
+        ("OFERTADO", "Ofertado (disponível no curso)"),
+    )
+    for chave, nome in series:
+        fig.add_bar(
+            y=cursos,
+            x=tabela[chave],
+            orientation="h",
+            name=nome,
+            marker=dict(color=CORES_OFERTA[chave], line=dict(color="#FFFFFF", width=1)),
+            text=[f"{v:.1f}".replace(".", ",") for v in tabela[chave]],
+            textposition="outside",
+            cliponaxis=False,
+            textfont=dict(size=11, color="#15163A"),
+            hovertemplate="<b>%{y}</b><br>" + nome + ": %{x:.2f}%<extra></extra>",
+        )
+    fig.update_layout(
+        title=dict(text="Faixa UFPB para o que o aluno integraliza: 10% a 15%", x=0, xref="container",
+                   xanchor="left", y=0.99, yanchor="top", font=dict(color="#1E6B36", size=12)),
+        barmode="group",
+        bargap=0.25,
+        height=66 * len(cursos) + 130,
+        margin=dict(l=8, r=8, t=64, b=8),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(family=FONTE, size=13, color="#15163A"),
+        separators=",.",
+        legend=dict(orientation="h", yanchor="bottom", y=1.0, xanchor="left", x=0, title_text="", traceorder="normal"),
+        xaxis=dict(ticksuffix="%", range=[0, max(26, float(tabela[["EXIGIDO", "OFERTADO"]].max().max()) + 8)], dtick=5, gridcolor="#E6E8F2", zeroline=False),
+        yaxis=dict(autorange="reversed", automargin=True, title=""),
+        hoverlabel=dict(font=dict(family=FONTE)),
+    )
+    return _html(fig)
+
+
+def grafico_uce_por_centro(tabela, por_curso=False):
+    centros = _quebrar(tabela.index) if por_curso else list(tabela.index)
     fig = go.Figure()
     fig.add_bar(
         y=centros,
@@ -212,12 +272,14 @@ def grafico_uce_por_centro(tabela):
         textfont=dict(size=12, color="#15163A"),
         customdata=list(zip(tabela["COM_UCE"], tabela["CURSOS"], tabela["HORAS"], tabela["CREDITOS"])),
         hovertemplate=(
-            "<b>%{y}</b><br>%{x:.0f} UCE(s)<br>%{customdata[0]} de %{customdata[1]} curso(s) com UCE"
+            "<b>%{y}</b><br>%{x:.0f} UCE(s)<br>%{customdata[2]:.0f} h e %{customdata[3]:.1f} créditos<extra></extra>"
+            if por_curso
+            else "<b>%{y}</b><br>%{x:.0f} UCE(s)<br>%{customdata[0]} de %{customdata[1]} curso(s) com UCE"
             "<br>%{customdata[2]:.0f} h e %{customdata[3]:.1f} créditos<extra></extra>"
         ),
     )
     fig.update_layout(
-        height=max(320, 34 * len(centros) + 90),
+        height=max(150, 42 * len(centros) + 90) if por_curso else max(320, 34 * len(centros) + 90),
         margin=dict(l=8, r=40, t=8, b=8),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
@@ -279,7 +341,11 @@ def _copiar_estaticos(saida):
 def _renderizar(ambiente, cursos, todos_centros, centro, raiz, atualizado_em):
     """Monta uma página com os cursos recebidos; centro=None é a página geral."""
     ativos = cursos_ativos(cursos)
-    por_centro = status_por_centro(ativos)
+    por_curso = centro is not None
+    if por_curso:
+        ativos = rotular_cursos(ativos)
+    chave = "ROTULO" if por_curso else "CENTRO"
+    por_centro = status_por_centro(ativos, chave)
     base_extensao = cursos_com_extensao(ativos)
     resumo_comp, total_horas = resumo_componentes(base_extensao)
     periodos, sem_periodo = implantados_por_periodo(ativos)
@@ -300,7 +366,8 @@ def _renderizar(ambiente, cursos, todos_centros, centro, raiz, atualizado_em):
         n_cursos=len(cursos),
         status=resumo_status(ativos),
         cores=CORES_STATUS,
-        grafico=grafico_status_por_centro(por_centro) if len(por_centro) else "",
+        por_curso=por_curso,
+        grafico=grafico_status_por_centro(por_centro, por_curso) if len(por_centro) else "",
         tabela_centros=[
             {"centro": c, **{s: int(linha[s]) for s in PRIORIDADE_STATUS}, "total": int(linha["TOTAL"])}
             for c, linha in por_centro.iterrows()
@@ -314,7 +381,7 @@ def _renderizar(ambiente, cursos, todos_centros, centro, raiz, atualizado_em):
         resumo_componentes=resumo_comp,
         total_horas=total_horas,
         n_extensao=len(base_extensao),
-        grafico_componentes=grafico_componentes_por_centro(componentes_por_centro(base_extensao)) if tem_extensao else "",
+        grafico_componentes=grafico_componentes_por_centro(componentes_por_centro(base_extensao, chave), por_curso) if tem_extensao else "",
         linhas_componentes=linhas_componentes(base_extensao),
         oferta=resumo_oferta(base_extensao),
         n_ppc=len(base_modificacao),
@@ -322,7 +389,7 @@ def _renderizar(ambiente, cursos, todos_centros, centro, raiz, atualizado_em):
         rotulos_modificacao=ROTULOS_MODIFICACAO,
         cores_modificacao=CORES_MODIFICACAO,
         resumo_modificacao=resumo_modificacao(base_modificacao),
-        grafico_modificacao=grafico_modificacao_por_centro(modificacao_por_centro(base_modificacao)) if len(base_modificacao) else "",
+        grafico_modificacao=grafico_modificacao_por_centro(modificacao_por_centro(base_modificacao, chave), por_curso) if len(base_modificacao) else "",
         linhas_ppc=linhas_ppc(base_modificacao),
         grafico_periodo=grafico_implantados_por_periodo(periodos) if periodos else "",
         periodos=periodos,
@@ -330,10 +397,10 @@ def _renderizar(ambiente, cursos, todos_centros, centro, raiz, atualizado_em):
         linhas_periodo=linhas_periodo(ativos),
         uce=resumo_uce(base_extensao),
         cor_uce=COR_UCE,
-        grafico_uce=grafico_uce_por_centro(uce_por_centro(base_extensao)) if tem_extensao else "",
+        grafico_uce=grafico_uce_por_centro(uce_por_centro(base_extensao, chave), por_curso) if tem_extensao else "",
         linhas_uce=linhas_uce(base_extensao),
         cores_oferta=CORES_OFERTA,
-        grafico_oferta=grafico_exigencia_oferta(oferta_por_centro(base_extensao)) if tem_extensao else "",
+        grafico_oferta=grafico_exigencia_oferta(oferta_por_centro(base_extensao, chave), por_curso) if tem_extensao else "",
         linhas_oferta=linhas_oferta(base_extensao),
         cursos=linhas_tabela(cursos),
         centros=[centro] if centro else todos_centros,

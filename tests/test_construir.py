@@ -222,3 +222,35 @@ def test_site_nao_chama_nenhum_endereco_externo(site):
         externos |= set(re.findall(r'(?:href|src)="(https?://[^"]+)"', pagina.read_text(encoding="utf-8")))
     permitidos = {e for e in externos if e.startswith("https://script.google.com/macros/") or "mailto" in e}
     assert externos - permitidos == set()
+
+
+def test_pagina_do_centro_tem_graficos_por_curso_e_a_geral_continua_por_centro(site):
+    geral = (site / "index.html").read_text(encoding="utf-8")
+    ccta = (site / "centro" / "ccta.html").read_text(encoding="utf-8")
+    for titulo in ("Situação de implantação por", "Modificação curricular por", "Distribuição por", "UCE por"):
+        assert f"{titulo} Centro" in geral and f"{titulo} curso" in ccta
+        assert f"{titulo} Centro" not in ccta and f"{titulo} curso" not in geral
+    assert "Hotelaria" in ccta and "Turismo" in ccta
+    assert json.dumps("Música Brasileira Popular")[1:-1].split("<br>")[0][:6] in ccta
+
+
+def test_rotulos_de_curso_sao_unicos_dentro_do_centro():
+    from painel.dados import cursos_ativos
+    from painel.metricas import rotular_cursos
+
+    ativos = cursos_ativos(cursos_unicos(carregar_linhas(FIXTURE)))
+    for _, grupo in ativos.groupby("CENTRO"):
+        rotulos = rotular_cursos(grupo)["ROTULO"]
+        assert rotulos.is_unique
+    ccen = rotular_cursos(ativos[ativos["CENTRO"] == "CCEN"])["ROTULO"]
+    assert "Física (Licenciatura)" in set(ccen) and "Física (Bacharelado)" in set(ccen)
+
+
+def test_graficos_por_curso_somam_o_mesmo_que_por_centro():
+    from painel.dados import cursos_ativos
+    from painel.metricas import (com_meta, cursos_com_extensao, rotular_cursos, status_por_centro, uce_por_centro)
+
+    ativos = rotular_cursos(cursos_ativos(cursos_unicos(carregar_linhas(FIXTURE))))
+    assert status_por_centro(ativos, "ROTULO")["TOTAL"].sum() == status_por_centro(ativos)["TOTAL"].sum() == len(ativos)
+    base = cursos_com_extensao(com_meta(ativos))
+    assert uce_por_centro(base, "ROTULO")["UCES"].sum() == uce_por_centro(base)["UCES"].sum()

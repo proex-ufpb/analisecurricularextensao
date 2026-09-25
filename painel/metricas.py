@@ -42,10 +42,34 @@ def resumo_status(ativos):
     ]
 
 
-def status_por_centro(ativos):
-    tabela = pd.crosstab(ativos["CENTRO"], ativos["STATUS"])
+def rotular_cursos(cursos):
+    """Coluna ROTULO com um nome único por curso dentro do Centro (usada nos gráficos por curso).
+
+    Nomes repetidos ganham tipo, sede e modalidade, nessa ordem, até ficarem distintos.
+    """
+    cursos = cursos.copy()
+    rotulos = cursos["CURSO"].map(formatar_nome)
+    for coluna in ("TIPO", "SEDE", "MODALIDADE"):
+        repetido = rotulos.duplicated(keep=False)
+        if not repetido.any():
+            break
+        rotulos = rotulos.where(~repetido, rotulos + " (" + cursos[coluna].map(formatar_nome) + ")")
+    cursos["ROTULO"] = rotulos
+    return cursos
+
+
+def _ordenar_por_categoria(tabela, categorias):
+    """Gráficos por curso: agrupa os cursos pela categoria (na ordem dada) e, dentro dela, por nome."""
+    tabela = tabela.assign(_pos=tabela[categorias].to_numpy().argmax(axis=1), _nome=tabela.index)
+    return tabela.sort_values(["_pos", "_nome"]).drop(columns=["_pos", "_nome"])
+
+
+def status_por_centro(ativos, por="CENTRO"):
+    tabela = pd.crosstab(ativos[por], ativos["STATUS"])
     tabela = tabela.reindex(columns=PRIORIDADE_STATUS, fill_value=0)
     tabela["TOTAL"] = tabela.sum(axis=1)
+    if por != "CENTRO":
+        return _ordenar_por_categoria(tabela, PRIORIDADE_STATUS)
     tabela["_centro"] = tabela.index
     return tabela.sort_values(["TOTAL", "_centro"], ascending=[False, True]).drop(columns="_centro")
 
@@ -182,9 +206,9 @@ def resumo_componentes(base):
     return itens, formatar_horas(total)
 
 
-def componentes_por_centro(base):
+def componentes_por_centro(base, por="CENTRO"):
     colunas = list(COLUNAS_COMPONENTES.values())
-    tabela = base.groupby("CENTRO")[colunas].sum()
+    tabela = base.groupby(por)[colunas].sum()
     tabela.columns = COMPONENTES
     tabela["TOTAL"] = tabela.sum(axis=1)
     tabela["_centro"] = tabela.index
@@ -243,9 +267,9 @@ def resumo_oferta(base):
     }
 
 
-def oferta_por_centro(base):
-    """Média, por centro, do % a integralizar e do % ofertado (em pontos percentuais)."""
-    tabela = base.groupby("CENTRO").agg(
+def oferta_por_centro(base, por="CENTRO"):
+    """Média, por centro (ou por curso), do % a integralizar e do % ofertado (em pontos percentuais)."""
+    tabela = base.groupby(por).agg(
         EXIGIDO=(COLUNA_PERCENTUAL, "mean"),
         OFERTADO=(COLUNA_OFERTA, "mean"),
         CURSOS=("CURSO", "count"),
@@ -312,15 +336,15 @@ def resumo_uce(base):
     }
 
 
-def uce_por_centro(base):
+def uce_por_centro(base, por="CENTRO"):
     base = com_uce(base)
-    tabela = base.groupby("CENTRO").agg(
+    tabela = base.groupby(por).agg(
         UCES=(COLUNA_UCE_QTDE, lambda s: s.fillna(0).sum()),
         HORAS=(COLUNA_UCE_HORAS, lambda s: s.fillna(0).sum()),
         CREDITOS=(COLUNA_UCE_CREDITOS, lambda s: s.fillna(0).sum()),
         CURSOS=("CURSO", "count"),
     )
-    tabela["COM_UCE"] = base[base["UCE_CLASSE"] == "COM_UCE"].groupby("CENTRO")["CURSO"].count().reindex(tabela.index).fillna(0).astype(int)
+    tabela["COM_UCE"] = base[base["UCE_CLASSE"] == "COM_UCE"].groupby(por)["CURSO"].count().reindex(tabela.index).fillna(0).astype(int)
     tabela["_centro"] = tabela.index
     return tabela.sort_values(["UCES", "_centro"], ascending=[False, True]).drop(columns="_centro")
 
@@ -417,9 +441,11 @@ def resumo_modificacao(base):
     ]
 
 
-def modificacao_por_centro(base):
-    tabela = pd.crosstab(base["CENTRO"], base[COLUNA_MODIFICACAO]).reindex(columns=MODIFICACOES, fill_value=0)
+def modificacao_por_centro(base, por="CENTRO"):
+    tabela = pd.crosstab(base[por], base[COLUNA_MODIFICACAO]).reindex(columns=MODIFICACOES, fill_value=0)
     tabela["TOTAL"] = tabela.sum(axis=1)
+    if por != "CENTRO":
+        return _ordenar_por_categoria(tabela, MODIFICACOES)
     tabela["_centro"] = tabela.index
     return tabela.sort_values(["TOTAL", "_centro"], ascending=[False, True]).drop(columns="_centro")
 

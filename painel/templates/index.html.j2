@@ -53,7 +53,7 @@
   </section>
 
   <section aria-labelledby="t-centros">
-    <h2 id="t-centros">Situação de implantação por Centro</h2>
+    <h2 id="t-centros">Situação de implantação por {{ 'curso' if por_curso else 'Centro' }}</h2>
     {% if grafico %}
     <div class="cartao-grande">
       {{ grafico|safe }}
@@ -62,7 +62,7 @@
         <div class="rolagem">
           <table>
             <thead>
-              <tr><th scope="col">Centro</th>{% for s in prioridade %}<th scope="col" class="num">{{ rotulos[s] }}</th>{% endfor %}<th scope="col" class="num">Total</th></tr>
+              <tr><th scope="col">{{ 'Curso' if por_curso else 'Centro' }}</th>{% for s in prioridade %}<th scope="col" class="num">{{ rotulos[s] }}</th>{% endfor %}<th scope="col" class="num">Total</th></tr>
             </thead>
             <tbody>
               {% for l in tabela_centros %}
@@ -140,7 +140,7 @@
       {% endfor %}
     </div>
 
-    <h3>Modificação curricular por Centro</h3>
+    <h3>Modificação curricular por {{ 'curso' if por_curso else 'Centro' }}</h3>
     <div class="cartao-grande">
       {{ grafico_modificacao|safe }}
       <details class="tabela-dados">
@@ -197,7 +197,7 @@
     {% if n_extensao %}
     {% if oferta.menores %}<p class="nota">Atenção: {{ oferta.menores }} curso(s) aparecem com oferta menor que a exigência; vale conferir na planilha.</p>{% endif %}
 
-    <h3>Média da exigência de integralização pelo aluno e da oferta de carga horária de extensão por Centro</h3>
+    <h3>Média da exigência de integralização pelo aluno e da oferta de carga horária de extensão por {{ 'curso' if por_curso else 'Centro' }}</h3>
     <div class="cartao-grande">
       {{ grafico_oferta|safe }}
       <details class="tabela-dados">
@@ -257,7 +257,7 @@
       {% endfor %}
     </div>
 
-    <h3>Distribuição por Centro</h3>
+    <h3>Distribuição por {{ 'curso' if por_curso else 'Centro' }}</h3>
     <div class="cartao-grande">
       {{ grafico_componentes|safe }}
       <details class="tabela-dados">
@@ -314,7 +314,7 @@
       </div>
     </div>
 
-    <h3>UCE por Centro</h3>
+    <h3>UCE por {{ 'curso' if por_curso else 'Centro' }}</h3>
     <div class="cartao-grande">
       {{ grafico_uce|safe }}
       <details class="tabela-dados">
