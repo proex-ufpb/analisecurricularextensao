@@ -58,7 +58,8 @@ GitHub Actions  ──►  exporta a planilha  ──►  data/analise_curricula
 ## 4. Rotina de manutenção
 
 ### O que conferir
-- **De vez em quando:** a aba *Actions* deve mostrar a execução diária em verde. Em *Settings → Developer settings → Personal access tokens* da conta do repositório, o campo *Last used* do token do Apps Script mostra quando ele foi usado pela última vez. Se estiver vermelha, abra o passo que falhou.
+- **De vez em quando:** a aba *Actions* deve mostrar a execução diária em verde. Se estiver vermelha, abra o passo que falhou.
+- **Uso do token do Apps Script:** em *Settings → Developer settings → Personal access tokens* da conta do repositório, o campo *Last used* mostra quando ele foi usado pela última vez.
 - **O GitHub pode desativar tarefas agendadas** de repositórios públicos sem atividade por cerca de 60 dias (como o CSV só muda quando a planilha muda, isso é possível). Se o painel parar de atualizar: *Actions → Atualizar dados e publicar painel* → se aparecer o aviso de desativado, clique em **Enable workflow**; depois **Run workflow** para atualizar na hora.
 
 ### O que expira ou precisa ser renovado
