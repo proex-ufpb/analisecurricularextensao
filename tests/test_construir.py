@@ -70,7 +70,7 @@ def test_menu_tem_links_de_reserva_sem_javascript(site):
 def test_centro_sem_curso_com_percentual_mostra_aviso_em_vez_de_grafico(site):
     html = (site / "centro" / "ccj.html").read_text(encoding="utf-8")
     assert html.count("Nenhum curso deste Centro tem percentual de extensão.") == 3
-    assert "plotly-graph-div" in html
+    assert "plotly-graph-div" in html or 'class="selos"' in html
 
 
 def test_selects_das_tabelas_ficam_so_com_o_centro_da_pagina(site):
@@ -103,7 +103,7 @@ def test_todas_as_paginas_tem_menu_cabecalho_e_pelo_menos_um_grafico(site):
     for pagina in [site / "index.html"] + sorted((site / "centro").glob("*.html")):
         html = pagina.read_text(encoding="utf-8")
         assert 'id="filtro-centro"' in html and "<header" in html and "<footer" in html, pagina.name
-        assert "plotly-graph-div" in html, pagina.name
+        assert "plotly-graph-div" in html or 'class="selos"' in html, pagina.name
 
 
 def test_menu_mostra_a_descricao_de_cada_centro_depois_de_um_traco(site):

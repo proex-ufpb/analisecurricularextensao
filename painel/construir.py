@@ -1,3 +1,4 @@
+import html
 import re
 import shutil
 import textwrap
@@ -66,6 +67,21 @@ CONFIG_GRAFICO = {"displayModeBar": False, "responsive": True}
 def _quebrar(nomes, largura=26):
     """Quebra nomes longos de curso em linhas (<br>) para caberem no eixo, inclusive no celular."""
     return ["<br>".join(textwrap.wrap(n, largura)) or n for n in nomes]
+
+
+def _selos(cursos, coluna, categorias, rotulos, cores):
+    """Página de Centro: um selo por curso, em colunas por categoria (substitui o gráfico de barras)."""
+    grupos = []
+    for categoria in categorias:
+        nomes = sorted(cursos.loc[cursos[coluna] == categoria, "ROTULO"])
+        if not nomes:
+            continue
+        selos = "".join(f'<li style="border-left-color:{cores[categoria]}">{html.escape(n)}</li>' for n in nomes)
+        grupos.append(
+            f'<div class="selos-grupo"><h4><span class="selos-marca" style="background:{cores[categoria]}"></span>'
+            f'{rotulos[categoria]} <span class="selos-total">{len(nomes)}</span></h4><ul>{selos}</ul></div>'
+        )
+    return '<div class="selos">' + "".join(grupos) + "</div>"
 
 
 def _html(fig):
@@ -150,7 +166,7 @@ def grafico_componentes_por_centro(tabela, por_curso=False):
         )
     fig.update_layout(
         barmode="stack",
-        height=max(150, 42 * len(centros) + 130) if por_curso else max(320, 34 * len(centros) + 130),
+        height=max(150, 34 * len(centros) + 130) if por_curso else max(320, 34 * len(centros) + 130),
         margin=dict(l=8, r=8, t=8, b=84),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
@@ -279,7 +295,7 @@ def grafico_uce_por_centro(tabela, por_curso=False):
         ),
     )
     fig.update_layout(
-        height=max(150, 42 * len(centros) + 90) if por_curso else max(320, 34 * len(centros) + 90),
+        height=max(150, 34 * len(centros) + 90) if por_curso else max(320, 34 * len(centros) + 90),
         margin=dict(l=8, r=40, t=8, b=8),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
@@ -367,7 +383,8 @@ def _renderizar(ambiente, cursos, todos_centros, centro, raiz, atualizado_em):
         status=resumo_status(ativos),
         cores=CORES_STATUS,
         por_curso=por_curso,
-        grafico=grafico_status_por_centro(por_centro, por_curso) if len(por_centro) else "",
+        grafico=(_selos(ativos, "STATUS", PRIORIDADE_STATUS, ROTULOS_STATUS, CORES_STATUS) if por_curso
+                 else grafico_status_por_centro(por_centro)) if len(por_centro) else "",
         tabela_centros=[
             {"centro": c, **{s: int(linha[s]) for s in PRIORIDADE_STATUS}, "total": int(linha["TOTAL"])}
             for c, linha in por_centro.iterrows()
@@ -389,7 +406,8 @@ def _renderizar(ambiente, cursos, todos_centros, centro, raiz, atualizado_em):
         rotulos_modificacao=ROTULOS_MODIFICACAO,
         cores_modificacao=CORES_MODIFICACAO,
         resumo_modificacao=resumo_modificacao(base_modificacao),
-        grafico_modificacao=grafico_modificacao_por_centro(modificacao_por_centro(base_modificacao, chave), por_curso) if len(base_modificacao) else "",
+        grafico_modificacao=(_selos(base_modificacao, "M.CURRICULAR", MODIFICACOES, ROTULOS_MODIFICACAO, CORES_MODIFICACAO)
+                             if por_curso else grafico_modificacao_por_centro(modificacao_por_centro(base_modificacao))) if len(base_modificacao) else "",
         linhas_ppc=linhas_ppc(base_modificacao),
         grafico_periodo=grafico_implantados_por_periodo(periodos) if periodos else "",
         periodos=periodos,

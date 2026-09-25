@@ -136,3 +136,11 @@ tr.inativo td { color: var(--texto-2); font-style: italic; }
   .logo-ufpb { height: 48px; }
   .logo-proex { height: 40px; }
 }
+
+/* Selos por curso (páginas de Centro) */
+.selos { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px 20px; }
+.selos-grupo h4 { margin: 0 0 8px; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; }
+.selos-marca { width: 12px; height: 12px; border-radius: 3px; flex: none; }
+.selos-total { color: var(--texto-2); font-weight: 500; }
+.selos ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.selos li { border: 1px solid var(--borda); border-left-width: 6px; border-radius: 6px; padding: 6px 10px; background: var(--fundo); font-size: 0.9rem; line-height: 1.25; }
