@@ -198,3 +198,27 @@ def test_centro_sem_modificacao_curricular_informada_mostra_aviso(site):
     html = (site / "centro" / "ccj.html").read_text(encoding="utf-8")
     assert "Nenhum curso deste Centro tem modificação curricular informada." in html
     assert 'id="tabela-ppc"' not in html
+
+
+def test_fonte_saira_e_servida_pelo_proprio_site(site):
+    for pagina in [site / "index.html", site / "equipe.html"] + sorted((site / "centro").glob("*.html")):
+        html = pagina.read_text(encoding="utf-8")
+        assert "fonts.googleapis.com" not in html and "fonts.gstatic.com" not in html, pagina.name
+    css = (site / "estilo.css").read_text(encoding="utf-8")
+    assert "fonts.googleapis.com" not in css and "@font-face" in css
+    for arquivo in re.findall(r'url\("([^"]+)"\)', css):
+        assert (site / arquivo).is_file(), arquivo
+    assert (site / "fonts" / "LICENCA-Saira-OFL.txt").is_file()
+
+
+def test_arquivos_da_fonte_sao_woff2_validos(site):
+    for nome in ("saira-latin.woff2", "saira-latin-ext.woff2"):
+        assert (site / "fonts" / nome).read_bytes()[:4] == b"wOF2", nome
+
+
+def test_site_nao_chama_nenhum_endereco_externo(site):
+    externos = set()
+    for pagina in [site / "index.html", site / "equipe.html"] + sorted((site / "centro").glob("*.html")):
+        externos |= set(re.findall(r'(?:href|src)="(https?://[^"]+)"', pagina.read_text(encoding="utf-8")))
+    permitidos = {e for e in externos if e.startswith("https://script.google.com/macros/") or "mailto" in e}
+    assert externos - permitidos == set()

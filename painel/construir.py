@@ -270,6 +270,10 @@ def _copiar_estaticos(saida):
         for arquivo in origem.glob("*"):
             if arquivo.suffix in {".css", ".js", ".png", ".svg"}:
                 shutil.copy(arquivo, saida / arquivo.name)
+    fontes = Path(__file__).resolve().parent / "static" / "fonts"
+    (saida / "fonts").mkdir(exist_ok=True)
+    for arquivo in fontes.glob("*"):
+        shutil.copy(arquivo, saida / "fonts" / arquivo.name)
 
 
 def _renderizar(ambiente, cursos, todos_centros, centro, raiz, atualizado_em):
