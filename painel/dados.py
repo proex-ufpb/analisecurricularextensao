@@ -11,7 +11,8 @@ PRIORIDADE_STATUS = ["IMPLANTADO", "AGUARDANDO IMPLANTAÇÃO", "EM ANDAMENTO", "
 SITUACAO_ATIVA = "EM ATIVIDADE"
 
 COLUNAS_TEXTO = CHAVE_CURSO + ["TURNO", "SITUAÇÃO", "STATUS"]
-COLUNAS_TEXTO_OPCIONAIS = ["PROCESSO", "RESOLUÇÃO", "M.CURRICULAR"]
+COLUNA_STATUS_PAINEL = "STATUS(PAINEL)"
+COLUNAS_TEXTO_OPCIONAIS = ["PROCESSO", "RESOLUÇÃO", "M.CURRICULAR", COLUNA_STATUS_PAINEL]
 COLUNA_PPC_NOVO = "PPC_ANO_NOVO"
 COLUNA_PPC_ANTIGO = "PPC_ANO_ANTIGO"
 EPOCA_PLANILHA = datetime(1899, 12, 30)
@@ -80,6 +81,9 @@ def cursos_unicos(linhas):
         curso["PPC_NOVO_PERIODO"] = next((p for p in grupo["PPC_NOVO_PERIODO"] if p), "") if "PPC_NOVO_PERIODO" in grupo.columns else ""
         curso["PPC_ANTIGO_PERIODO"] = next((p for p in grupo["PPC_ANTIGO_PERIODO"] if p), "") if "PPC_ANTIGO_PERIODO" in grupo.columns else ""
         curso["M.CURRICULAR"] = next((m for m in grupo["M.CURRICULAR"] if m), "") if "M.CURRICULAR" in grupo.columns else ""
+        curso[COLUNA_STATUS_PAINEL] = (
+            next((s for s in grupo[COLUNA_STATUS_PAINEL] if s), "") if COLUNA_STATUS_PAINEL in grupo.columns else ""
+        )
         curso["PROCESSOS_LINHAS"] = list(grupo["PROCESSO"]) if "PROCESSO" in grupo.columns else []
         curso["RESOLUCOES_LINHAS"] = list(grupo["RESOLUÇÃO"]) if "RESOLUÇÃO" in grupo.columns else []
         registros.append(curso)

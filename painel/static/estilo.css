@@ -93,6 +93,9 @@ h3 { margin: 28px 0 10px; font-size: 1.05rem; color: var(--texto); font-weight: 
 
 .nota { margin: 14px 0 0; color: var(--texto-2); font-size: 0.9rem; max-width: 90ch; }
 
+.legenda { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; color: var(--texto-2); font-size: 0.9rem; max-width: 90ch; }
+.legenda strong { color: var(--texto); }
+
 .cartao-grande { background: var(--superficie); border: 1px solid var(--borda); border-radius: var(--raio); padding: 16px; }
 
 .tabela-dados { margin-top: 12px; }
@@ -120,7 +123,6 @@ tbody tr:hover { background: #f7f8fd; }
 tr.inativo td { color: var(--texto-2); font-style: italic; }
 .nowrap { white-space: nowrap; }
 .selo { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
-.aviso { display: inline-block; padding: 1px 8px; border-radius: 999px; background: #fff0f1; color: #a3000c; border: 1px solid #f3b5ba; font-style: normal; white-space: nowrap; }
 
 .rodape { background: var(--azul); color: #fff; margin-top: 24px; }
 .rodape-interno { max-width: 1120px; margin: 0 auto; padding: 28px 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 28px; }

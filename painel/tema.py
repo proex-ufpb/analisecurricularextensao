@@ -32,6 +32,14 @@ CORES_STATUS = {
     "SEM PROCESSO": "#E30613",
 }
 
+# Cartões do "Panorama geral curricular" (STATUS(PAINEL)): mesma paleta categórica de CORES_STATUS,
+# na mesma ordem fixa (Implantado, Aguardando implantação), reaproveitando o laranja já validado.
+CORES_PAINEL = {
+    "IMPLANTADO": CORES_STATUS["IMPLANTADO"],
+    "AGUARDANDO IMPLANTAÇÃO": CORES_STATUS["AGUARDANDO IMPLANTAÇÃO"],
+    "AGUARDANDO REFORMULAÇÃO": CORES_STATUS["EM ANDAMENTO"],
+}
+
 CORES_COMPONENTES = {
     "BASICA": "#0087A0",
     "COMPLEMENTAR": "#42BFD6",

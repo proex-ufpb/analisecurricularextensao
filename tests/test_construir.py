@@ -174,7 +174,7 @@ def test_endereco_configurado_do_apps_script_aparece_na_pagina_da_equipe(site):
 
 def test_textos_da_secao_de_implantacao_por_semestre(site):
     html = (site / "index.html").read_text(encoding="utf-8")
-    assert "Quantitativo de cursos com a inserção da extensão no currículo implantada por semestre" in html
+    assert "Situação de implantação curricular por semestre" in html
     eixo_x = json.dumps("Ano e Semestre de implantação do PPC")[1:-1]  # o Plotly grava os acentos do gráfico escapados
     assert eixo_x in html
     tabela = html[html.index('id="tabela-periodo"'):html.index("</table>", html.index('id="tabela-periodo"'))]
@@ -227,11 +227,43 @@ def test_site_nao_chama_nenhum_endereco_externo(site):
 def test_pagina_do_centro_tem_graficos_por_curso_e_a_geral_continua_por_centro(site):
     geral = (site / "index.html").read_text(encoding="utf-8")
     ccta = (site / "centro" / "ccta.html").read_text(encoding="utf-8")
-    for titulo in ("Situação de implantação por", "Modificação curricular por", "Distribuição por", "UCE por"):
+    for titulo in ("Situação de implantação curricular por", "Carga horária curricular por",
+                   "Distribuição da carga horária de componentes por"):
         assert f"{titulo} Centro" in geral and f"{titulo} curso" in ccta
         assert f"{titulo} Centro" not in ccta and f"{titulo} curso" not in geral
+    assert "Distribuição das Unidades Curriculares de Extensão por Centros" in geral
+    assert "Distribuição das Unidades Curriculares de Extensão por curso" in ccta
+    assert "por Centros" not in ccta and "Extensão por curso" not in geral
     assert "Hotelaria" in ccta and "Turismo" in ccta
     assert json.dumps("Música Brasileira Popular")[1:-1].split("<br>")[0][:6] in ccta
+
+
+def test_titulo_e_panorama_geral_curricular(site):
+    html = (site / "index.html").read_text(encoding="utf-8")
+    assert "<h1>Acompanhamento da Configuração Curricular da Extensão" in html
+    assert 'id="t-resumo">Panorama geral curricular</h2>' in html
+    assert 'id="t-cursos">Panorama geral cursos</h2>' in html
+    # A cópia congelada é anterior à coluna STATUS(PAINEL): os três cartões aparecem, mas zerados.
+    inicio, fim = html.index('id="t-resumo"'), html.index('id="t-centros"')
+    resumo = html[inicio:fim]
+    assert resumo.count('<div class="cartao">') == 3
+    assert "Implantado:</strong> currículo implantado no SIGAA." in resumo
+    assert "Aguardando reformulação:</strong>" in resumo
+    assert "processo SIPAC" in resumo
+    assert "sem STATUS(PAINEL) preenchido" in resumo
+    assert "processo SIPAC nº 23074.090940/2026-33" in resumo
+
+
+def test_tabela_de_cursos_mostra_status_painel_e_nao_tem_situacao_do_curso(site):
+    html = (site / "index.html").read_text(encoding="utf-8")
+    inicio = html.index('id="tabela-cursos"')
+    cabecalho = html[html.index("<thead>", inicio):html.index("</thead>", inicio)]
+    assert "<th scope=\"col\">Status</th>" in cabecalho
+    assert "Implantação" not in cabecalho and "Situação do curso" not in cabecalho
+    tabela = html[inicio:html.index("</table>", inicio)]
+    assert "Situação do curso" not in tabela
+    filtros = html[html.index('id="f-busca"'):html.index('id="f-status"')]
+    assert filtros.rsplit("<label>", 1)[-1].splitlines()[0].strip() == "Status"
 
 
 def test_rotulos_de_curso_sao_unicos_dentro_do_centro():

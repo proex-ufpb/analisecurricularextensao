@@ -15,9 +15,11 @@ from painel.metricas import (
     MODIFICACOES,
     LIMITE_MAXIMO,
     LIMITE_MINIMO,
+    PRIORIDADE_PAINEL,
     ROTULOS_COMPONENTES,
     ROTULOS_MODIFICACAO,
     ROTULOS_UCE,
+    ROTULOS_PAINEL,
     ROTULOS_STATUS,
     base_ppc,
     com_meta,
@@ -38,7 +40,7 @@ from painel.metricas import (
     resumo_modificacao,
     resumo_oferta,
     resumo_uce,
-    resumo_status,
+    resumo_status_painel,
     status_por_centro,
 )
 from painel.tema import (
@@ -51,6 +53,7 @@ from painel.tema import (
     CORES_MODIFICACAO,
     COR_UCE,
     CORES_OFERTA,
+    CORES_PAINEL,
     CORES_STATUS,
     EQUIPE,
     NOMES_CENTROS,
@@ -369,6 +372,7 @@ def _renderizar(ambiente, cursos, todos_centros, centro, raiz, atualizado_em):
     periodos, sem_periodo = implantados_por_periodo(ativos)
     tem_extensao = len(base_extensao) > 0
     base_modificacao = base_ppc(implantados)
+    status_painel, sem_status_painel = resumo_status_painel(ativos)
 
     return ambiente.get_template("index.html.j2").render(
         raiz=raiz,
@@ -382,7 +386,9 @@ def _renderizar(ambiente, cursos, todos_centros, centro, raiz, atualizado_em):
         n_ativos=len(ativos),
         n_fora=len(cursos) - len(ativos),
         n_cursos=len(cursos),
-        status=resumo_status(ativos),
+        status_painel=status_painel,
+        cores_painel=CORES_PAINEL,
+        sem_status_painel=sem_status_painel,
         cores=CORES_STATUS,
         por_curso=por_curso,
         grafico=(_selos(ativos, "STATUS", PRIORIDADE_STATUS, ROTULOS_STATUS, CORES_STATUS) if por_curso
@@ -393,6 +399,8 @@ def _renderizar(ambiente, cursos, todos_centros, centro, raiz, atualizado_em):
         ],
         rotulos=ROTULOS_STATUS,
         prioridade=PRIORIDADE_STATUS,
+        prioridade_painel=PRIORIDADE_PAINEL,
+        rotulos_painel=ROTULOS_PAINEL,
         componentes=COMPONENTES,
         rotulos_componentes=ROTULOS_COMPONENTES,
         rotulos_uce=ROTULOS_UCE,

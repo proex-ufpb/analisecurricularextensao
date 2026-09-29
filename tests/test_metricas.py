@@ -28,6 +28,7 @@ from painel.metricas import (
     linhas_componentes,
     resumo_componentes,
     resumo_status,
+    resumo_status_painel,
     status_por_centro,
 )
 
@@ -51,6 +52,35 @@ def test_totais_e_percentuais_usam_so_cursos_ativos():
     assert sum(item["total"] for item in resumo) == len(ativos) == 118
     assert round(sum(item["percentual"] for item in resumo), 6) == 100.0
     assert [item["status"] for item in resumo][0] == "IMPLANTADO"
+
+
+def test_resumo_status_painel_sem_a_coluna_na_planilha_nao_quebra():
+    # A cópia congelada (24/09) é anterior à coluna STATUS(PAINEL) (29/09/2026): fica em branco em
+    # todo curso, então os três cartões aparecem zerados e todos os ativos contam como "sem status".
+    _, ativos = base_real()
+    resumo, sem_status = resumo_status_painel(ativos)
+    assert [r["total"] for r in resumo] == [0, 0, 0]
+    assert sem_status == len(ativos)
+
+
+def test_resumo_status_painel_sem_a_coluna_no_dataframe_nao_quebra():
+    _, ativos = base_real()
+    sem_coluna = ativos.drop(columns=["STATUS(PAINEL)"])
+    assert resumo_status_painel(sem_coluna) == ([], 0)
+
+
+def test_resumo_status_painel_usa_a_coluna_nova_quando_ela_existe():
+    _, ativos = base_real()
+    com_coluna = ativos.assign(**{
+        "STATUS(PAINEL)": (["IMPLANTADO"] * 3 + ["AGUARDANDO IMPLANTAÇÃO"] * 2
+                           + ["AGUARDANDO REFORMULAÇÃO"] + [""] * (len(ativos) - 6))
+    })
+    resumo, sem_status = resumo_status_painel(com_coluna)
+    assert {r["status"]: r["total"] for r in resumo} == {
+        "IMPLANTADO": 3, "AGUARDANDO IMPLANTAÇÃO": 2, "AGUARDANDO REFORMULAÇÃO": 1,
+    }
+    assert sem_status == len(ativos) - 6
+    assert round(sum(r["percentual"] for r in resumo), 6) == round(6 / len(ativos) * 100, 6)
 
 
 def test_status_por_centro_soma_igual_ao_total_de_ativos():
@@ -189,6 +219,23 @@ def test_processo_e_resolucao_da_base_real():
     economicas = next(l for l in linhas.values() if l["curso"] == "Ciências Econômicas" and l["emec"] == "13394")
     assert economicas["processo"] == "23074.028746/2023-16" and economicas["resolucao"] == "42/2025"
     assert all(set(l) >= {"processo", "resolucao"} for l in linhas.values())
+
+
+def test_tabela_de_cursos_usa_status_painel_nao_o_status_antigo():
+    cursos, _ = base_real()
+    linhas = linhas_tabela(com_meta(cursos))
+    assert "situacao" not in linhas[0]
+    assert set(l["status"] for l in linhas) == {""}  # cópia congelada: STATUS(PAINEL) ainda em branco
+    assert set(l["status_rotulo"] for l in linhas) == {"—"}
+    assert all("ativo" in l for l in linhas)
+
+
+def test_tabela_de_cursos_status_com_a_coluna_painel_preenchida():
+    cursos, _ = base_real()
+    cursos = cursos.assign(**{"STATUS(PAINEL)": "AGUARDANDO REFORMULAÇÃO"})
+    linha = linhas_tabela(com_meta(cursos))[0]
+    assert linha["status"] == "AGUARDANDO REFORMULAÇÃO"
+    assert linha["status_rotulo"] == "Aguardando reformulação"
 
 
 def frame_uce(*linhas):

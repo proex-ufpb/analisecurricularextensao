@@ -2,13 +2,22 @@ import re
 
 import pandas as pd
 
-from painel.dados import PRIORIDADE_STATUS
+from painel.dados import COLUNA_STATUS_PAINEL, PRIORIDADE_STATUS
 
 ROTULOS_STATUS = {
     "IMPLANTADO": "Implantado",
     "AGUARDANDO IMPLANTAÇÃO": "Aguardando implantação",
     "EM ANDAMENTO": "Em andamento",
     "SEM PROCESSO": "Sem processo",
+}
+
+# Painel geral (cartões do "Panorama geral curricular"): base = STATUS(PAINEL), coluna nova da
+# planilha (29/09/2026). As demais seções continuam pelo STATUS de sempre (ver ROTULOS_STATUS acima).
+PRIORIDADE_PAINEL = ["IMPLANTADO", "AGUARDANDO IMPLANTAÇÃO", "AGUARDANDO REFORMULAÇÃO"]
+ROTULOS_PAINEL = {
+    "IMPLANTADO": "Implantado",
+    "AGUARDANDO IMPLANTAÇÃO": "Aguardando implantação",
+    "AGUARDANDO REFORMULAÇÃO": "Aguardando reformulação",
 }
 
 MINUSCULAS = {"de", "da", "do", "das", "dos", "e", "em", "para", "a", "o"}
@@ -40,6 +49,25 @@ def resumo_status(ativos):
         }
         for status in PRIORIDADE_STATUS
     ]
+
+
+def resumo_status_painel(ativos):
+    """Cartões do "Panorama geral curricular": base = STATUS(PAINEL). Retorna (cartões, sem_status)."""
+    if COLUNA_STATUS_PAINEL not in ativos.columns:
+        return [], 0
+    contagem = ativos[COLUNA_STATUS_PAINEL].value_counts()
+    total = len(ativos)
+    resumo = [
+        {
+            "status": status,
+            "rotulo": ROTULOS_PAINEL[status],
+            "total": int(contagem.get(status, 0)),
+            "percentual": (contagem.get(status, 0) / total * 100) if total else 0.0,
+        }
+        for status in PRIORIDADE_PAINEL
+    ]
+    sem_status = int((~ativos[COLUNA_STATUS_PAINEL].isin(PRIORIDADE_PAINEL)).sum())
+    return resumo, sem_status
 
 
 def rotular_cursos(cursos):
@@ -145,9 +173,8 @@ def linhas_tabela(cursos):
             "modalidade": formatar_nome(c["MODALIDADE"]),
             "turnos": c["TURNOS"] or "—",
             "emec": c["CÓDIGO E-MEC"] or "Não informado",
-            "status": c["STATUS"],
-            "status_rotulo": ROTULOS_STATUS.get(c["STATUS"], formatar_nome(c["STATUS"])),
-            "situacao": formatar_nome(c["SITUAÇÃO"]),
+            "status": c[COLUNA_STATUS_PAINEL],
+            "status_rotulo": ROTULOS_PAINEL.get(c[COLUNA_STATUS_PAINEL], "—"),
             "ativo": c["SITUAÇÃO"] == "EM ATIVIDADE",
             "processo": formatar_processo(c.get("PROCESSOS_LINHAS", [])),
             "resolucao": formatar_resolucao(c.get("RESOLUCOES_LINHAS", [])),
