@@ -11,7 +11,7 @@ PRIORIDADE_STATUS = ["IMPLANTADO", "AGUARDANDO IMPLANTAÇÃO", "EM ANDAMENTO", "
 SITUACAO_ATIVA = "EM ATIVIDADE"
 
 COLUNAS_TEXTO = CHAVE_CURSO + ["TURNO", "SITUAÇÃO", "STATUS"]
-COLUNA_STATUS_PAINEL = "STATUS(PAINEL)"
+COLUNA_STATUS_PAINEL = "STATUS (PAINEL)"
 COLUNAS_TEXTO_OPCIONAIS = ["PROCESSO", "RESOLUÇÃO", "M.CURRICULAR", COLUNA_STATUS_PAINEL]
 COLUNA_PPC_NOVO = "PPC_ANO_NOVO"
 COLUNA_PPC_ANTIGO = "PPC_ANO_ANTIGO"
@@ -49,6 +49,8 @@ def _rank_status(status):
 
 def carregar_linhas(caminho=CSV_PADRAO):
     linhas = pd.read_csv(caminho, dtype=str, keep_default_na=False)
+    # Nomes de coluna às vezes vêm com espaço duplo da planilha (ex.: "STATUS  (PAINEL)"); normaliza.
+    linhas.columns = [_limpar_espacos(c) for c in linhas.columns]
     for coluna in COLUNAS_TEXTO:
         linhas[coluna] = linhas[coluna].map(_limpar_espacos)
     linhas["CÓDIGO E-MEC"] = linhas["CÓDIGO E-MEC"].map(_limpar_emec)

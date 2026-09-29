@@ -91,6 +91,14 @@ def test_erros_da_planilha_viram_sem_dado(tmp_path):
     assert pd.isna(carregar_linhas(csv).iloc[0]["% CH_INTEGRALIZADA_EXTENSAO"])
 
 
+def test_carregar_linhas_normaliza_espacos_duplos_no_nome_da_coluna(tmp_path):
+    # A planilha trouxe o cabeçalho "STATUS  (PAINEL)" (dois espaços); sem normalizar, a coluna
+    # não é reconhecida em lugar nenhum do código e os cartões do Panorama ficam sempre zerados.
+    csv = tmp_path / "a.csv"
+    pd.DataFrame([linha(**{"STATUS  (PAINEL)": "IMPLANTADO"})]).to_csv(csv, index=False)
+    assert carregar_linhas(csv).iloc[0]["STATUS (PAINEL)"] == "IMPLANTADO"
+
+
 def test_cursos_ativos_exclui_extincao():
     cursos = unicos(linha(emec="1"), linha(emec="2", situacao="EM EXTINÇÃO"))
     assert len(cursos_ativos(cursos)) == 1

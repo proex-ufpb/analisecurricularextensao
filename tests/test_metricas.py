@@ -65,14 +65,14 @@ def test_resumo_status_painel_sem_a_coluna_na_planilha_nao_quebra():
 
 def test_resumo_status_painel_sem_a_coluna_no_dataframe_nao_quebra():
     _, ativos = base_real()
-    sem_coluna = ativos.drop(columns=["STATUS(PAINEL)"])
+    sem_coluna = ativos.drop(columns=["STATUS (PAINEL)"])
     assert resumo_status_painel(sem_coluna) == ([], 0)
 
 
 def test_resumo_status_painel_usa_a_coluna_nova_quando_ela_existe():
     _, ativos = base_real()
     com_coluna = ativos.assign(**{
-        "STATUS(PAINEL)": (["IMPLANTADO"] * 3 + ["AGUARDANDO IMPLANTAÇÃO"] * 2
+        "STATUS (PAINEL)": (["IMPLANTADO"] * 3 + ["AGUARDANDO IMPLANTAÇÃO"] * 2
                            + ["AGUARDANDO REFORMULAÇÃO"] + [""] * (len(ativos) - 6))
     })
     resumo, sem_status = resumo_status_painel(com_coluna)
@@ -232,7 +232,7 @@ def test_tabela_de_cursos_usa_status_painel_nao_o_status_antigo():
 
 def test_tabela_de_cursos_status_com_a_coluna_painel_preenchida():
     cursos, _ = base_real()
-    cursos = cursos.assign(**{"STATUS(PAINEL)": "AGUARDANDO REFORMULAÇÃO"})
+    cursos = cursos.assign(**{"STATUS (PAINEL)": "AGUARDANDO REFORMULAÇÃO"})
     linha = linhas_tabela(com_meta(cursos))[0]
     assert linha["status"] == "AGUARDANDO REFORMULAÇÃO"
     assert linha["status_rotulo"] == "Aguardando reformulação"
