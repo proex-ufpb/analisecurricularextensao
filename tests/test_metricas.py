@@ -91,6 +91,19 @@ def test_status_por_centro_soma_igual_ao_total_de_ativos():
     assert tabela["TOTAL"].is_monotonic_decreasing
 
 
+def test_status_por_centro_aceita_uma_coluna_e_categorias_diferentes():
+    from painel.metricas import PRIORIDADE_PAINEL
+
+    _, ativos = base_real()
+    com_coluna = ativos.assign(**{
+        "STATUS (PAINEL)": ["IMPLANTADO", "AGUARDANDO REFORMULAÇÃO"] * (len(ativos) // 2) + ["IMPLANTADO"] * (len(ativos) % 2)
+    })
+    tabela = status_por_centro(com_coluna, coluna="STATUS (PAINEL)", categorias=PRIORIDADE_PAINEL)
+    assert list(tabela.columns) == PRIORIDADE_PAINEL + ["TOTAL"]
+    assert tabela["TOTAL"].sum() == len(ativos)
+    assert (tabela["AGUARDANDO IMPLANTAÇÃO"] == 0).all()
+
+
 @pytest.mark.parametrize("valor,esperado", [
     (float("nan"), "NAO_IMPLANTADO"),
     (0.0, "NAO_IMPLANTADO"),

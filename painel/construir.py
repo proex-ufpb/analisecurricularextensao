@@ -9,7 +9,7 @@ import plotly.graph_objects as go
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from plotly.offline import get_plotlyjs
 
-from painel.dados import CSV_PADRAO, PRIORIDADE_STATUS, carregar_linhas, cursos_ativos, cursos_unicos
+from painel.dados import CSV_PADRAO, COLUNA_STATUS_PAINEL, carregar_linhas, cursos_ativos, cursos_unicos
 from painel.metricas import (
     COMPONENTES,
     MODIFICACOES,
@@ -20,7 +20,6 @@ from painel.metricas import (
     ROTULOS_MODIFICACAO,
     ROTULOS_UCE,
     ROTULOS_PAINEL,
-    ROTULOS_STATUS,
     base_ppc,
     com_meta,
     componentes_por_centro,
@@ -48,7 +47,7 @@ from painel.tema import (
     CONTATO,
     COR_TEXTO_COMPONENTES,
     COR_TEXTO_MODIFICACAO,
-    COR_TEXTO_NA_BARRA,
+    COR_TEXTO_PAINEL,
     CORES_COMPONENTES,
     CORES_MODIFICACAO,
     COR_UCE,
@@ -134,7 +133,7 @@ def _barras_por_centro(tabela, categorias, rotulos, cores, cores_texto, titulo_x
 
 def grafico_status_por_centro(tabela, por_curso=False):
     return _barras_por_centro(
-        tabela, PRIORIDADE_STATUS, ROTULOS_STATUS, CORES_STATUS, COR_TEXTO_NA_BARRA, "Cursos ativos", por_curso
+        tabela, PRIORIDADE_PAINEL, ROTULOS_PAINEL, CORES_PAINEL, COR_TEXTO_PAINEL, "Cursos ativos", por_curso
     )
 
 
@@ -364,7 +363,7 @@ def _renderizar(ambiente, cursos, todos_centros, centro, raiz, atualizado_em):
     if por_curso:
         ativos = rotular_cursos(ativos)
     chave = "ROTULO" if por_curso else "CENTRO"
-    por_centro = status_por_centro(ativos, chave)
+    por_centro = status_por_centro(ativos, chave, COLUNA_STATUS_PAINEL, PRIORIDADE_PAINEL)
     # Da seção de implantação por semestre em diante, os gráficos consideram só os cursos implantados.
     implantados = ativos[ativos["STATUS"] == "IMPLANTADO"]
     base_extensao = cursos_com_extensao(implantados)
@@ -389,16 +388,13 @@ def _renderizar(ambiente, cursos, todos_centros, centro, raiz, atualizado_em):
         status_painel=status_painel,
         cores_painel=CORES_PAINEL,
         sem_status_painel=sem_status_painel,
-        cores=CORES_STATUS,
         por_curso=por_curso,
-        grafico=(_selos(ativos, "STATUS", PRIORIDADE_STATUS, ROTULOS_STATUS, CORES_STATUS) if por_curso
+        grafico=(_selos(ativos, COLUNA_STATUS_PAINEL, PRIORIDADE_PAINEL, ROTULOS_PAINEL, CORES_PAINEL) if por_curso
                  else grafico_status_por_centro(por_centro)) if len(por_centro) else "",
         tabela_centros=[
-            {"centro": c, **{s: int(linha[s]) for s in PRIORIDADE_STATUS}, "total": int(linha["TOTAL"])}
+            {"centro": c, **{s: int(linha[s]) for s in PRIORIDADE_PAINEL}, "total": int(linha["TOTAL"])}
             for c, linha in por_centro.iterrows()
         ],
-        rotulos=ROTULOS_STATUS,
-        prioridade=PRIORIDADE_STATUS,
         prioridade_painel=PRIORIDADE_PAINEL,
         rotulos_painel=ROTULOS_PAINEL,
         componentes=COMPONENTES,

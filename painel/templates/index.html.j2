@@ -59,7 +59,7 @@
   </section>
 
   <section aria-labelledby="t-centros">
-    <h2 id="t-centros">Situação de implantação curricular por {{ 'curso' if por_curso else 'Centro' }}</h2>
+    <h2 id="t-centros">Situação da implantação curricular por {{ 'curso' if por_curso else 'Centro' }}</h2>
     {% if grafico %}
     <div class="cartao-grande">
       {{ grafico|safe }}
@@ -68,11 +68,11 @@
         <div class="rolagem">
           <table>
             <thead>
-              <tr><th scope="col">{{ 'Curso' if por_curso else 'Centro' }}</th>{% for s in prioridade %}<th scope="col" class="num">{{ rotulos[s] }}</th>{% endfor %}<th scope="col" class="num">Total</th></tr>
+              <tr><th scope="col">{{ 'Curso' if por_curso else 'Centro' }}</th>{% for s in prioridade_painel %}<th scope="col" class="num">{{ rotulos_painel[s] }}</th>{% endfor %}<th scope="col" class="num">Total</th></tr>
             </thead>
             <tbody>
               {% for l in tabela_centros %}
-              <tr><th scope="row">{{ l.centro }}</th>{% for s in prioridade %}<td class="num">{{ l[s] }}</td>{% endfor %}<td class="num">{{ l.total }}</td></tr>
+              <tr><th scope="row">{{ l.centro }}</th>{% for s in prioridade_painel %}<td class="num">{{ l[s] }}</td>{% endfor %}<td class="num">{{ l.total }}</td></tr>
               {% endfor %}
             </tbody>
           </table>

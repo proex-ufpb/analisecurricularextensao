@@ -92,12 +92,12 @@ def _ordenar_por_categoria(tabela, categorias):
     return tabela.sort_values(["_pos", "_nome"]).drop(columns=["_pos", "_nome"])
 
 
-def status_por_centro(ativos, por="CENTRO"):
-    tabela = pd.crosstab(ativos[por], ativos["STATUS"])
-    tabela = tabela.reindex(columns=PRIORIDADE_STATUS, fill_value=0)
+def status_por_centro(ativos, por="CENTRO", coluna="STATUS", categorias=PRIORIDADE_STATUS):
+    tabela = pd.crosstab(ativos[por], ativos[coluna])
+    tabela = tabela.reindex(columns=categorias, fill_value=0)
     tabela["TOTAL"] = tabela.sum(axis=1)
     if por != "CENTRO":
-        return _ordenar_por_categoria(tabela, PRIORIDADE_STATUS)
+        return _ordenar_por_categoria(tabela, categorias)
     tabela["_centro"] = tabela.index
     return tabela.sort_values(["TOTAL", "_centro"], ascending=[False, True]).drop(columns="_centro")
 

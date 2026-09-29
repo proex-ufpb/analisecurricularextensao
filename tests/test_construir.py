@@ -227,7 +227,7 @@ def test_site_nao_chama_nenhum_endereco_externo(site):
 def test_pagina_do_centro_tem_graficos_por_curso_e_a_geral_continua_por_centro(site):
     geral = (site / "index.html").read_text(encoding="utf-8")
     ccta = (site / "centro" / "ccta.html").read_text(encoding="utf-8")
-    for titulo in ("Situação de implantação curricular por", "Carga horária curricular por",
+    for titulo in ("Situação da implantação curricular por", "Carga horária curricular por",
                    "Distribuição da carga horária de componentes por"):
         assert f"{titulo} Centro" in geral and f"{titulo} curso" in ccta
         assert f"{titulo} Centro" not in ccta and f"{titulo} curso" not in geral
@@ -252,6 +252,15 @@ def test_titulo_e_panorama_geral_curricular(site):
     assert "processo SIPAC" in resumo
     assert "sem STATUS(PAINEL) preenchido" in resumo
     assert "processo SIPAC nº 23074.090940/2026-33" in resumo
+
+
+def test_secao_por_centro_agora_usa_status_painel_nao_o_status_antigo(site):
+    html = (site / "index.html").read_text(encoding="utf-8")
+    inicio, fim = html.index('id="t-centros"'), html.index('id="t-periodo"')
+    secao = html[inicio:fim]
+    assert "Situação da implantação curricular por Centro" in secao
+    assert "Aguardando reformula" in secao  # texto do Plotly vem com os acentos escapados
+    assert "Em andamento" not in secao and "Sem processo" not in secao
 
 
 def test_tabela_de_cursos_mostra_status_painel_e_nao_tem_situacao_do_curso(site):
