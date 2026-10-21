@@ -191,7 +191,7 @@ def linhas_da_tabela(html, tabela_id):
 def test_modificacao_curricular_das_paginas_por_centro_soma_a_da_pagina_geral(site):
     geral = linhas_da_tabela((site / "index.html").read_text(encoding="utf-8"), "tabela-ppc")
     soma = sum(linhas_da_tabela(p.read_text(encoding="utf-8"), "tabela-ppc") for p in (site / "centro").glob("*.html"))
-    assert geral == soma == 35  # 36 cursos ativos com classificação, menos Engenharia Química (ainda não implantada)
+    assert geral == soma == 33  # só STATUS (PAINEL) = Implantado: 35 antes, menos os 2 com implantação agendada
 
 
 def test_centro_sem_modificacao_curricular_informada_mostra_aviso(site):
@@ -320,3 +320,19 @@ def test_a_partir_da_secao_por_semestre_so_entram_cursos_implantados(site):
         assert i > inicio
         assert "Engenharia Química" not in html[i:html.index("</table>", i)], tabela_id
         assert "Hotelaria" not in html[i:html.index("</table>", i)], tabela_id
+
+
+def test_secoes_apos_o_semestre_nao_incluem_curso_com_implantacao_agendada(site):
+    from painel.dados import cursos_ativos
+    from painel.metricas import base_ppc
+
+    cursos = cursos_unicos(carregar_linhas(FIXTURE))
+    ativos = cursos_ativos(cursos)
+    agendados = ativos[ativos["STATUS (PAINEL)"] == "IMPLANTAÇÃO AGENDADA"]
+    assert len(agendados) > 0
+    html = (site / "index.html").read_text(encoding="utf-8")
+    secoes = html[html.index('id="t-ppc"'):html.index('id="t-cursos"')]  # a tabela final lista todos os cursos
+    from painel.metricas import formatar_nome
+    for _, c in agendados.iterrows():
+        assert f"<td>{formatar_nome(c['CURSO'])}</td>" not in secoes, c["CURSO"]
+    assert len(base_ppc(ativos[ativos["STATUS (PAINEL)"] == "IMPLANTADO"])) == linhas_da_tabela(html, "tabela-ppc")

@@ -377,7 +377,7 @@ def _renderizar(ambiente, cursos, todos_centros, centro, raiz, atualizado_em):
     chave = "ROTULO" if por_curso else "CENTRO"
     por_centro = status_por_centro(ativos, chave, COLUNA_STATUS_PAINEL, PRIORIDADE_PAINEL)
     # Da seção de implantação por semestre em diante, os gráficos consideram só os cursos implantados.
-    implantados = ativos[ativos["STATUS"] == "IMPLANTADO"]
+    implantados = ativos[ativos[COLUNA_STATUS_PAINEL] == "IMPLANTADO"]
     base_extensao = cursos_com_extensao(implantados)
     resumo_comp, total_horas = resumo_componentes(base_extensao)
     periodos, sem_periodo = implantados_por_periodo(ativos)
