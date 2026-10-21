@@ -349,17 +349,17 @@ def test_implantados_por_periodo_nao_pula_semestres_e_ignora_outros_status():
 
 def test_implantacao_agendada_entra_no_grafico_por_semestre_em_serie_separada():
     ativos = frame_periodo(
-        ("IMPLANTADO", "2026.1"), ("IMPLANTAÇÃO AGENDADA", "2026.2"), ("IMPLANTAÇÃO AGENDADA", "2027.1"),
+        ("IMPLANTADO", "2026.1"), ("IMPLANTADO", "2026.2"), ("IMPLANTAÇÃO AGENDADA", "2027.1"),
         ("IMPLANTAÇÃO AGENDADA", ""),
     )
     periodos, sem_periodo = implantados_por_periodo(ativos)
     assert [(p["periodo"], p["IMPLANTADO"], p["IMPLANTAÇÃO AGENDADA"], p["total"]) for p in periodos] == [
-        ("2026.1", 1, 0, 1), ("2026.2", 0, 1, 1), ("2027.1", 0, 1, 1),
+        ("2026.1", 1, 0, 1), ("2026.2", 1, 0, 1), ("2027.1", 0, 1, 1),
     ]
     assert sem_periodo == 1
     linhas = linhas_periodo(ativos)
     assert [l["status_rotulo"] for l in linhas] == [
-        "Implantado", "Implantação agendada", "Implantação agendada", "Implantação agendada",
+        "Implantado", "Implantado", "Implantação agendada", "Implantação agendada",
     ]
 
 
