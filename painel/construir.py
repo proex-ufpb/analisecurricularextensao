@@ -9,7 +9,14 @@ import plotly.graph_objects as go
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from plotly.offline import get_plotlyjs
 
-from painel.dados import CSV_PADRAO, COLUNA_STATUS_PAINEL, carregar_linhas, cursos_ativos, cursos_unicos
+from painel.dados import (
+    CSV_PADRAO,
+    COLUNA_STATUS_PAINEL,
+    carregar_linhas,
+    contagem_situacao,
+    cursos_ativos,
+    cursos_unicos,
+)
 from painel.metricas import (
     COMPONENTES,
     MODIFICACOES,
@@ -53,7 +60,6 @@ from painel.tema import (
     COR_UCE,
     CORES_OFERTA,
     CORES_PAINEL,
-    CORES_STATUS,
     EQUIPE,
     NOMES_CENTROS,
     URL_ENVIO_RELATORIO,
@@ -312,24 +318,29 @@ def grafico_uce_por_centro(tabela, por_curso=False):
 
 
 def grafico_implantados_por_periodo(periodos):
+    """Colunas empilhadas por semestre do PPC novo: implantados e, em outra cor, com implantação agendada."""
     fig = go.Figure()
-    fig.add_bar(
-        x=[p["periodo"] for p in periodos],
-        y=[p["total"] for p in periodos],
-        marker=dict(color=CORES_STATUS["IMPLANTADO"], line=dict(color="#FFFFFF", width=1)),
-        text=[str(p["total"]) if p["total"] else "" for p in periodos],
-        textposition="outside",
-        cliponaxis=False,
-        textfont=dict(size=13, color="#15163A"),
-        hovertemplate="<b>PPC %{x}</b><br>%{y} curso(s) implantado(s)<extra></extra>",
-    )
+    for status in ("IMPLANTADO", "IMPLANTAÇÃO AGENDADA"):
+        valores = [p[status] for p in periodos]
+        fig.add_bar(
+            x=[p["periodo"] for p in periodos],
+            y=valores,
+            name=ROTULOS_PAINEL[status],
+            marker=dict(color=CORES_PAINEL[status], line=dict(color="#FFFFFF", width=2)),
+            text=[str(v) if v else "" for v in valores],
+            textposition="inside",
+            insidetextanchor="middle",
+            textfont=dict(size=13, color=COR_TEXTO_PAINEL[status]),
+            hovertemplate="<b>PPC %{x}</b><br>" + ROTULOS_PAINEL[status] + ": %{y} curso(s)<extra></extra>",
+        )
     fig.update_layout(
-        height=380,
-        margin=dict(l=8, r=8, t=24, b=8),
+        barmode="stack",
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0, title_text="", traceorder="normal"),
+        height=400,
+        margin=dict(l=8, r=8, t=8, b=8),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         font=dict(family=FONTE, size=13, color="#15163A"),
-        showlegend=False,
         bargap=0.3,
         xaxis=dict(title="Ano e Semestre de implantação do PPC", type="category", gridcolor="#E6E8F2"),
         yaxis=dict(gridcolor="#E6E8F2", zeroline=False, rangemode="tozero", dtick=2),
@@ -359,6 +370,7 @@ def _copiar_estaticos(saida):
 def _renderizar(ambiente, cursos, todos_centros, centro, raiz, atualizado_em):
     """Monta uma página com os cursos recebidos; centro=None é a página geral."""
     ativos = cursos_ativos(cursos)
+    situacoes = contagem_situacao(cursos)
     por_curso = centro is not None
     if por_curso:
         ativos = rotular_cursos(ativos)
@@ -383,7 +395,8 @@ def _renderizar(ambiente, cursos, todos_centros, centro, raiz, atualizado_em):
         else f"Centro {centro} — Análise Curricular | PROEX/UFPB",
         todos_centros=[{"nome": c, "slug": slug_centro(c), "descricao": NOMES_CENTROS.get(c, "")} for c in todos_centros],
         n_ativos=len(ativos),
-        n_fora=len(cursos) - len(ativos),
+        n_extincao=situacoes["extincao"],
+        n_criacao=situacoes["criacao"],
         n_cursos=len(cursos),
         status_painel=status_painel,
         cores_painel=CORES_PAINEL,

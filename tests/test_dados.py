@@ -3,7 +3,14 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from painel.dados import PRIORIDADE_STATUS, carregar_linhas, cursos_ativos, cursos_unicos, resumo
+from painel.dados import (
+    PRIORIDADE_STATUS,
+    carregar_linhas,
+    contagem_situacao,
+    cursos_ativos,
+    cursos_unicos,
+    resumo,
+)
 
 FIXTURE = Path(__file__).parent / "fixtures" / "analise_curricular_2026-09-24.csv"
 
@@ -97,6 +104,30 @@ def test_carregar_linhas_normaliza_espacos_duplos_no_nome_da_coluna(tmp_path):
     csv = tmp_path / "a.csv"
     pd.DataFrame([linha(**{"STATUS  (PAINEL)": "IMPLANTADO"})]).to_csv(csv, index=False)
     assert carregar_linhas(csv).iloc[0]["STATUS (PAINEL)"] == "IMPLANTADO"
+
+
+def test_situacao_e_status_painel_aceitam_caixa_e_acentos_diferentes(tmp_path):
+    csv = tmp_path / "a.csv"
+    pd.DataFrame([
+        linha(emec="1", situacao="Em atividade", **{"STATUS  (PAINEL)": "Implantação Agendada"}),
+        linha(emec="2", situacao="em  extinção", **{"STATUS  (PAINEL)": "IMPLANTACAO AGENDADA"}),
+        linha(emec="3", situacao="EM PROCESSO DE CRIACAO", **{"STATUS  (PAINEL)": "aguardando reformulação"}),
+    ]).to_csv(csv, index=False)
+    linhas = carregar_linhas(csv)
+    assert list(linhas["SITUAÇÃO"]) == ["EM ATIVIDADE", "EM EXTINÇÃO", "EM PROCESSO DE CRIAÇÃO"]
+    assert list(linhas["STATUS (PAINEL)"]) == [
+        "IMPLANTAÇÃO AGENDADA", "IMPLANTAÇÃO AGENDADA", "AGUARDANDO REFORMULAÇÃO",
+    ]
+
+
+def test_cursos_em_processo_de_criacao_nao_sao_ativos_nem_extincao():
+    cursos = unicos(
+        linha(emec="1"), linha(emec="2", situacao="EM EXTINÇÃO"),
+        linha(emec="3", situacao="EM PROCESSO DE CRIAÇÃO"), linha(emec="4", situacao="EM PROCESSO DE CRIAÇÃO"),
+        linha(emec="5", situacao="SUSPENSO"),
+    )
+    assert len(cursos_ativos(cursos)) == 1
+    assert contagem_situacao(cursos) == {"ativos": 1, "extincao": 1, "criacao": 2, "outras": 1}
 
 
 def test_cursos_ativos_exclui_extincao():

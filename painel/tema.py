@@ -32,15 +32,18 @@ CORES_STATUS = {
     "SEM PROCESSO": "#E30613",
 }
 
-# Cartões do "Panorama geral curricular" (STATUS(PAINEL)): mesma paleta categórica de CORES_STATUS,
-# na mesma ordem fixa (Implantado, Aguardando implantação), reaproveitando o laranja já validado.
+# Cartões do "Panorama geral curricular" (STATUS (PAINEL)): mesma paleta categórica de CORES_STATUS
+# (Implantado, Aguardando implantação, laranja já validado) mais o verde-azulado da Implantação agendada.
+# Distância mínima entre cores com visão de cores alterada (OKLab x 100): 8,4 (meta: 8 ou mais).
 CORES_PAINEL = {
     "IMPLANTADO": CORES_STATUS["IMPLANTADO"],
+    "IMPLANTAÇÃO AGENDADA": "#1F9E89",
     "AGUARDANDO IMPLANTAÇÃO": CORES_STATUS["AGUARDANDO IMPLANTAÇÃO"],
     "AGUARDANDO REFORMULAÇÃO": CORES_STATUS["EM ANDAMENTO"],
 }
 COR_TEXTO_PAINEL = {
     "IMPLANTADO": "#FFFFFF",
+    "IMPLANTAÇÃO AGENDADA": "#15163A",
     "AGUARDANDO IMPLANTAÇÃO": "#15163A",
     "AGUARDANDO REFORMULAÇÃO": "#15163A",
 }

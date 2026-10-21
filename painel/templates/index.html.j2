@@ -39,7 +39,7 @@
     <div class="cartoes">
       <div class="cartao cartao-total">
         <span class="numero">{{ n_ativos }}</span>
-        <span class="rotulo">cursos ativos<span class="secundario">{{ n_fora }} cursos em extinção</span></span>
+        <span class="rotulo">cursos ativos<span class="secundario">{{ n_extincao }} {{ 'curso' if n_extincao == 1 else 'cursos' }} em extinção</span><span class="secundario">{{ n_criacao }} {{ 'curso' if n_criacao == 1 else 'cursos' }} em processo de criação</span></span>
       </div>
       {% for s in status_painel %}
       <div class="cartao">
@@ -49,10 +49,11 @@
       </div>
       {% endfor %}
     </div>
-    <p class="nota">Cada curso é contado uma única vez, pelo código e-MEC: cursos com mais de um turno contam como um só.<br>Os cursos com status em extinção não são computados nos totais e percentuais.{% if sem_status_painel %}<br>{{ sem_status_painel }} curso(s) sem STATUS(PAINEL) preenchido na planilha (não aparece(m) nos cartões acima).{% endif %}</p>
+    <p class="nota">Cada curso é contado uma única vez, pelo código e-MEC: cursos com mais de um turno contam como um só.<br>Os cursos com status em extinção não são computados nos totais e percentuais.{% if sem_status_painel %}<br>{{ sem_status_painel }} curso(s) sem STATUS(PAINEL) reconhecido na planilha (não aparece(m) nos cartões acima).{% endif %}</p>
     <ul class="legenda">
       <li><strong>Cursos em extinção</strong> – o quantitativo foi disponibilizado pela Pró-Reitoria de Graduação por meio do processo SIPAC nº 23074.090940/2026-33.</li>
       <li><strong>Implantado:</strong> currículo implantado no SIGAA.</li>
+      <li><strong>Implantação agendada:</strong> PPC reformulado cadastrado no SIGAA com previsão de início superior ao período letivo em andamento.</li>
       <li><strong>Aguardando implantação:</strong> aguardando implantação no SIGAA ou pendente de publicação de Resolução.</li>
       <li><strong>Aguardando reformulação:</strong> aguardando a reformulação do PPC, conforme a Resolução CONSEPE 02/2022.</li>
     </ul>
@@ -88,7 +89,7 @@
     {% if grafico_periodo %}
     <div class="cartao-grande">
       {{ grafico_periodo|safe }}
-      {% if sem_periodo %}<p class="nota">{{ sem_periodo }} curso(s) implantado(s) sem período válido no PPC novo (não aparece(m) no gráfico).</p>{% endif %}
+      {% if sem_periodo %}<p class="nota">{{ sem_periodo }} curso(s) implantado(s) ou com implantação agendada sem período válido no PPC novo (não aparece(m) no gráfico).</p>{% endif %}
       <details class="tabela-dados">
         <summary>Ver os dados do gráfico em tabela</summary>
         <div class="filtros filtros-duplos">
@@ -108,16 +109,17 @@
             </select>
           </label>
         </div>
-        <p class="contagem" aria-live="polite"><span id="contagem-periodo">{{ linhas_periodo|length }}</span> de {{ linhas_periodo|length }} cursos implantados</p>
+        <p class="contagem" aria-live="polite"><span id="contagem-periodo">{{ linhas_periodo|length }}</span> de {{ linhas_periodo|length }} cursos</p>
         <div class="rolagem rolagem-alta">
           <table id="tabela-periodo">
             <thead>
-              <tr><th scope="col">Centro</th><th scope="col">Curso</th><th scope="col">Código e-MEC</th><th scope="col">Ano.Semestre</th></tr>
+              <tr><th scope="col">Centro</th><th scope="col">Curso</th><th scope="col">Código e-MEC</th><th scope="col">Ano.Semestre</th><th scope="col">Status</th></tr>
             </thead>
             <tbody>
               {% for c in linhas_periodo %}
               <tr data-centro="{{ c.centro }}" data-periodo="{{ c.periodo }}" data-busca="{{ (c.curso ~ ' ' ~ c.emec)|lower }}">
                 <td>{{ c.centro }}</td><td>{{ c.curso }}</td><td>{{ c.emec }}</td><td>{{ c.periodo }}</td>
+                <td><span class="selo"><i class="marca" style="background: {{ cores_painel[c.status] }}"></i>{{ c.status_rotulo }}</span></td>
               </tr>
               {% endfor %}
             </tbody>
@@ -390,8 +392,9 @@
         <label>Situação do curso
           <select id="f-ativo">
             <option value="">Todas</option>
-            <option value="1">Em atividade</option>
-            <option value="0">Em extinção</option>
+            <option value="atividade">Em atividade</option>
+            <option value="extincao">Em extinção</option>
+            <option value="criacao">Em processo de criação</option>
           </select>
         </label>
       </div>
@@ -407,7 +410,7 @@
           </thead>
           <tbody>
             {% for c in cursos %}
-            <tr data-centro="{{ c.centro }}" data-status="{{ c.status }}" data-ativo="{{ 1 if c.ativo else 0 }}" data-busca="{{ (c.curso ~ ' ' ~ c.emec ~ ' ' ~ c.processo ~ ' ' ~ c.resolucao)|lower }}"{% if not c.ativo %} class="inativo"{% endif %}>
+            <tr data-centro="{{ c.centro }}" data-status="{{ c.status }}" data-ativo="{{ c.situacao_codigo }}" data-busca="{{ (c.curso ~ ' ' ~ c.emec ~ ' ' ~ c.processo ~ ' ' ~ c.resolucao)|lower }}"{% if not c.ativo %} class="inativo"{% endif %}>
               <td>{{ c.centro }}</td>
               <td>{{ c.curso }}</td>
               <td>{{ c.tipo }}</td>

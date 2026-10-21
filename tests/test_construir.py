@@ -243,15 +243,28 @@ def test_titulo_e_panorama_geral_curricular(site):
     assert "<h1>Acompanhamento da Configuração Curricular da Extensão" in html
     assert 'id="t-resumo">Panorama geral curricular</h2>' in html
     assert 'id="t-cursos">Panorama geral cursos</h2>' in html
-    # A cópia congelada é anterior à coluna STATUS(PAINEL): os três cartões aparecem, mas zerados.
     inicio, fim = html.index('id="t-resumo"'), html.index('id="t-centros"')
     resumo = html[inicio:fim]
-    assert resumo.count('<div class="cartao">') == 3
+    assert resumo.count('<div class="cartao">') == 4  # Implantado, Implantação agendada, Aguardando x2
+    assert "Implantação agendada</span>" in resumo
     assert "Implantado:</strong> currículo implantado no SIGAA." in resumo
+    assert ("<strong>Implantação agendada:</strong> PPC reformulado cadastrado no SIGAA com previsão de início "
+            "superior ao período letivo em andamento.") in resumo
     assert "Aguardando reformulação:</strong>" in resumo
-    assert "processo SIPAC" in resumo
-    assert "sem STATUS(PAINEL) preenchido" in resumo
+    assert "sem STATUS(PAINEL) reconhecido" not in resumo
     assert "processo SIPAC nº 23074.090940/2026-33" in resumo
+    # cartão de cursos ativos: extinção e processo de criação logo abaixo
+    assert "em extinção</span>" in resumo and "em processo de criação</span>" in resumo
+
+
+def test_grafico_por_semestre_tem_legenda_com_a_implantacao_agendada(site):
+    html = (site / "index.html").read_text(encoding="utf-8")
+    secao = html[html.index('id="t-periodo"'):html.index('id="t-ppc"')]
+    assert '"name":"Implantado"' in secao
+    assert json.dumps("Implantação agendada")[1:-1] in secao  # o Plotly grava os acentos escapados
+    assert '"barmode":"stack"' in secao
+    tabela = secao[secao.index('id="tabela-periodo"'):secao.index("</table>", secao.index('id="tabela-periodo"'))]
+    assert '<th scope="col">Status</th>' in tabela and "Implantação agendada" in tabela
 
 
 def test_secao_por_centro_agora_usa_status_painel_nao_o_status_antigo(site):

@@ -2,7 +2,14 @@ import re
 
 import pandas as pd
 
-from painel.dados import COLUNA_STATUS_PAINEL, PRIORIDADE_STATUS
+from painel.dados import (
+    COLUNA_STATUS_PAINEL,
+    PRIORIDADE_STATUS,
+    SITUACAO_ATIVA,
+    SITUACAO_CRIACAO,
+    SITUACAO_EXTINCAO,
+    STATUS_PAINEL_VALIDOS,
+)
 
 ROTULOS_STATUS = {
     "IMPLANTADO": "Implantado",
@@ -13,9 +20,10 @@ ROTULOS_STATUS = {
 
 # Painel geral (cartões do "Panorama geral curricular"): base = STATUS(PAINEL), coluna nova da
 # planilha (29/09/2026). As demais seções continuam pelo STATUS de sempre (ver ROTULOS_STATUS acima).
-PRIORIDADE_PAINEL = ["IMPLANTADO", "AGUARDANDO IMPLANTAÇÃO", "AGUARDANDO REFORMULAÇÃO"]
+PRIORIDADE_PAINEL = list(STATUS_PAINEL_VALIDOS)
 ROTULOS_PAINEL = {
     "IMPLANTADO": "Implantado",
+    "IMPLANTAÇÃO AGENDADA": "Implantação agendada",
     "AGUARDANDO IMPLANTAÇÃO": "Aguardando implantação",
     "AGUARDANDO REFORMULAÇÃO": "Aguardando reformulação",
 }
@@ -162,6 +170,9 @@ def formatar_resolucao(valores):
     return "—"
 
 
+CODIGOS_SITUACAO = {SITUACAO_ATIVA: "atividade", SITUACAO_EXTINCAO: "extincao", SITUACAO_CRIACAO: "criacao"}
+
+
 def linhas_tabela(cursos):
     ordenados = cursos.sort_values(["CENTRO", "CURSO", "SEDE"])
     return [
@@ -175,7 +186,8 @@ def linhas_tabela(cursos):
             "emec": c["CÓDIGO E-MEC"] or "Não informado",
             "status": c[COLUNA_STATUS_PAINEL],
             "status_rotulo": ROTULOS_PAINEL.get(c[COLUNA_STATUS_PAINEL], "—"),
-            "ativo": c["SITUAÇÃO"] == "EM ATIVIDADE",
+            "ativo": c["SITUAÇÃO"] == SITUACAO_ATIVA,
+            "situacao_codigo": CODIGOS_SITUACAO.get(c["SITUAÇÃO"], "outra"),
             "processo": formatar_processo(c.get("PROCESSOS_LINHAS", [])),
             "resolucao": formatar_resolucao(c.get("RESOLUCOES_LINHAS", [])),
         }
@@ -414,22 +426,36 @@ def _semestres_entre(primeiro, ultimo):
     return periodos
 
 
+STATUS_NO_PERIODO = ["IMPLANTADO", "IMPLANTAÇÃO AGENDADA"]
+
+
+def _no_periodo(ativos):
+    """Cursos ativos implantados ou com implantação agendada, segundo o STATUS (PAINEL)."""
+    return ativos[ativos[COLUNA_STATUS_PAINEL].isin(STATUS_NO_PERIODO)]
+
+
 def implantados_por_periodo(ativos):
-    """Cursos ativos com STATUS Implantado por período (ano.semestre) do PPC novo, sem pular semestres."""
-    implantados = ativos[ativos["STATUS"] == "IMPLANTADO"]
-    validos = implantados[implantados["PPC_NOVO_PERIODO"].map(lambda p: bool(PADRAO_PERIODO.match(p))).astype(bool)]
-    contagem = validos["PPC_NOVO_PERIODO"].value_counts()
-    if contagem.empty:
-        return [], len(implantados)
+    """Cursos ativos implantados e com implantação agendada por período (ano.semestre) do PPC novo, sem pular semestres.
+
+    Cada item traz o total de cada STATUS (PAINEL) no período. Devolve também quantos cursos ficaram sem período válido.
+    """
+    base = _no_periodo(ativos)
+    validos = base[base["PPC_NOVO_PERIODO"].map(lambda p: bool(PADRAO_PERIODO.match(p))).astype(bool)]
+    if validos.empty:
+        return [], len(base)
+    contagem = pd.crosstab(validos["PPC_NOVO_PERIODO"], validos[COLUNA_STATUS_PAINEL])
     chaves = sorted((int(a), int(b)) for a, b in (PADRAO_PERIODO.match(p).groups() for p in contagem.index))
-    periodos = _semestres_entre(chaves[0], chaves[-1])
-    return [{"periodo": p, "total": int(contagem.get(p, 0))} for p in periodos], len(implantados) - len(validos)
+    periodos = []
+    for p in _semestres_entre(chaves[0], chaves[-1]):
+        item = {status: int(contagem[status].get(p, 0)) if status in contagem.columns else 0 for status in STATUS_NO_PERIODO}
+        periodos.append({"periodo": p, **item, "total": sum(item.values())})
+    return periodos, len(base) - len(validos)
 
 
 def linhas_periodo(ativos):
-    """Cursos implantados com o período do PPC novo, do mais antigo para o mais recente."""
-    implantados = ativos[ativos["STATUS"] == "IMPLANTADO"]
-    ordenados = implantados.assign(_periodo=implantados["PPC_NOVO_PERIODO"].replace("", "9999.9")).sort_values(
+    """Cursos implantados e com implantação agendada, com o período do PPC novo, do mais antigo para o mais recente."""
+    base = _no_periodo(ativos)
+    ordenados = base.assign(_periodo=base["PPC_NOVO_PERIODO"].replace("", "9999.9")).sort_values(
         ["_periodo", "CENTRO", "CURSO"], kind="stable")
     return [
         {
@@ -437,6 +463,8 @@ def linhas_periodo(ativos):
             "curso": formatar_nome(c["CURSO"]),
             "emec": c["CÓDIGO E-MEC"] or "Não informado",
             "periodo": c["PPC_NOVO_PERIODO"] or "—",
+            "status": c[COLUNA_STATUS_PAINEL],
+            "status_rotulo": ROTULOS_PAINEL[c[COLUNA_STATUS_PAINEL]],
         }
         for _, c in ordenados.iterrows()
     ]

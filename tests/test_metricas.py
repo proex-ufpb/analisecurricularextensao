@@ -54,12 +54,21 @@ def test_totais_e_percentuais_usam_so_cursos_ativos():
     assert [item["status"] for item in resumo][0] == "IMPLANTADO"
 
 
-def test_resumo_status_painel_sem_a_coluna_na_planilha_nao_quebra():
-    # A cópia congelada (24/09) é anterior à coluna STATUS(PAINEL) (29/09/2026): fica em branco em
-    # todo curso, então os três cartões aparecem zerados e todos os ativos contam como "sem status".
+def test_resumo_status_painel_da_base_real_tem_quatro_cartoes_e_fecha_com_os_ativos():
+    # A cópia congelada recebeu a coluna STATUS (PAINEL) derivada do STATUS antigo (ver conftest/fixture).
     _, ativos = base_real()
     resumo, sem_status = resumo_status_painel(ativos)
-    assert [r["total"] for r in resumo] == [0, 0, 0]
+    assert [r["status"] for r in resumo] == [
+        "IMPLANTADO", "IMPLANTAÇÃO AGENDADA", "AGUARDANDO IMPLANTAÇÃO", "AGUARDANDO REFORMULAÇÃO",
+    ]
+    assert sem_status == 0 and sum(r["total"] for r in resumo) == len(ativos)
+    assert next(r for r in resumo if r["status"] == "IMPLANTAÇÃO AGENDADA")["total"] > 0
+
+
+def test_resumo_status_painel_com_a_coluna_em_branco_zera_os_cartoes():
+    _, ativos = base_real()
+    resumo, sem_status = resumo_status_painel(ativos.assign(**{"STATUS (PAINEL)": ""}))
+    assert [r["total"] for r in resumo] == [0, 0, 0, 0]
     assert sem_status == len(ativos)
 
 
@@ -72,15 +81,15 @@ def test_resumo_status_painel_sem_a_coluna_no_dataframe_nao_quebra():
 def test_resumo_status_painel_usa_a_coluna_nova_quando_ela_existe():
     _, ativos = base_real()
     com_coluna = ativos.assign(**{
-        "STATUS (PAINEL)": (["IMPLANTADO"] * 3 + ["AGUARDANDO IMPLANTAÇÃO"] * 2
-                           + ["AGUARDANDO REFORMULAÇÃO"] + [""] * (len(ativos) - 6))
+        "STATUS (PAINEL)": (["IMPLANTADO"] * 3 + ["IMPLANTAÇÃO AGENDADA"] * 4 + ["AGUARDANDO IMPLANTAÇÃO"] * 2
+                           + ["AGUARDANDO REFORMULAÇÃO"] + [""] * (len(ativos) - 10))
     })
     resumo, sem_status = resumo_status_painel(com_coluna)
     assert {r["status"]: r["total"] for r in resumo} == {
-        "IMPLANTADO": 3, "AGUARDANDO IMPLANTAÇÃO": 2, "AGUARDANDO REFORMULAÇÃO": 1,
+        "IMPLANTADO": 3, "IMPLANTAÇÃO AGENDADA": 4, "AGUARDANDO IMPLANTAÇÃO": 2, "AGUARDANDO REFORMULAÇÃO": 1,
     }
-    assert sem_status == len(ativos) - 6
-    assert round(sum(r["percentual"] for r in resumo), 6) == round(6 / len(ativos) * 100, 6)
+    assert sem_status == len(ativos) - 10
+    assert round(sum(r["percentual"] for r in resumo), 6) == round(10 / len(ativos) * 100, 6)
 
 
 def test_status_por_centro_soma_igual_ao_total_de_ativos():
@@ -238,9 +247,11 @@ def test_tabela_de_cursos_usa_status_painel_nao_o_status_antigo():
     cursos, _ = base_real()
     linhas = linhas_tabela(com_meta(cursos))
     assert "situacao" not in linhas[0]
-    assert set(l["status"] for l in linhas) == {""}  # cópia congelada: STATUS(PAINEL) ainda em branco
-    assert set(l["status_rotulo"] for l in linhas) == {"—"}
-    assert all("ativo" in l for l in linhas)
+    assert set(l["status"] for l in linhas) == {
+        "IMPLANTADO", "IMPLANTAÇÃO AGENDADA", "AGUARDANDO IMPLANTAÇÃO", "AGUARDANDO REFORMULAÇÃO",
+    }
+    assert {l["status_rotulo"] for l in linhas} >= {"Implantação agendada", "Aguardando reformulação"}
+    assert all("ativo" in l and l["situacao_codigo"] in {"atividade", "extincao"} for l in linhas)
 
 
 def test_tabela_de_cursos_status_com_a_coluna_painel_preenchida():
@@ -318,7 +329,8 @@ def test_periodo_ppc_converte_data_da_planilha_em_ano_semestre(valor, esperado):
 
 def frame_periodo(*linhas):
     return pd.DataFrame([
-        {"CENTRO": "CT", "CURSO": f"C{i}", "CÓDIGO E-MEC": str(i), "STATUS": status, "PPC_NOVO_PERIODO": periodo}
+        {"CENTRO": "CT", "CURSO": f"C{i}", "CÓDIGO E-MEC": str(i), "STATUS (PAINEL)": status,
+         "PPC_NOVO_PERIODO": periodo}
         for i, (status, periodo) in enumerate(linhas)
     ])
 
@@ -326,13 +338,29 @@ def frame_periodo(*linhas):
 def test_implantados_por_periodo_nao_pula_semestres_e_ignora_outros_status():
     ativos = frame_periodo(
         ("IMPLANTADO", "2024.1"), ("IMPLANTADO", "2024.1"), ("IMPLANTADO", "2025.1"),
-        ("EM ANDAMENTO", "2023.1"), ("SEM PROCESSO", ""),
+        ("AGUARDANDO REFORMULAÇÃO", "2023.1"), ("AGUARDANDO IMPLANTAÇÃO", ""),
     )
     periodos, sem_periodo = implantados_por_periodo(ativos)
     assert [(p["periodo"], p["total"]) for p in periodos] == [
         ("2024.1", 2), ("2024.2", 0), ("2025.1", 1),
     ]
     assert sem_periodo == 0
+
+
+def test_implantacao_agendada_entra_no_grafico_por_semestre_em_serie_separada():
+    ativos = frame_periodo(
+        ("IMPLANTADO", "2026.1"), ("IMPLANTAÇÃO AGENDADA", "2026.2"), ("IMPLANTAÇÃO AGENDADA", "2027.1"),
+        ("IMPLANTAÇÃO AGENDADA", ""),
+    )
+    periodos, sem_periodo = implantados_por_periodo(ativos)
+    assert [(p["periodo"], p["IMPLANTADO"], p["IMPLANTAÇÃO AGENDADA"], p["total"]) for p in periodos] == [
+        ("2026.1", 1, 0, 1), ("2026.2", 0, 1, 1), ("2027.1", 0, 1, 1),
+    ]
+    assert sem_periodo == 1
+    linhas = linhas_periodo(ativos)
+    assert [l["status_rotulo"] for l in linhas] == [
+        "Implantado", "Implantação agendada", "Implantação agendada", "Implantação agendada",
+    ]
 
 
 def test_implantado_sem_periodo_valido_e_contado_a_parte():
@@ -354,6 +382,6 @@ def test_implantados_por_periodo_da_base_real():
 
 
 def test_implantados_por_periodo_sem_nenhum_implantado_nao_quebra():
-    ativos = frame_periodo(("EM ANDAMENTO", "2024.1"))
+    ativos = frame_periodo(("AGUARDANDO REFORMULAÇÃO", "2024.1"))
     assert implantados_por_periodo(ativos) == ([], 0)
     assert implantados_por_periodo(ativos.iloc[0:0]) == ([], 0)

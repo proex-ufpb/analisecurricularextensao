@@ -1,4 +1,5 @@
 import re
+import unicodedata
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -9,6 +10,11 @@ CSV_PADRAO = Path(__file__).resolve().parent.parent / "data" / "analise_curricul
 CHAVE_CURSO = ["CÓDIGO E-MEC", "TIPO", "CENTRO", "CURSO", "MODALIDADE", "SEDE"]
 PRIORIDADE_STATUS = ["IMPLANTADO", "AGUARDANDO IMPLANTAÇÃO", "EM ANDAMENTO", "SEM PROCESSO"]
 SITUACAO_ATIVA = "EM ATIVIDADE"
+SITUACAO_EXTINCAO = "EM EXTINÇÃO"
+SITUACAO_CRIACAO = "EM PROCESSO DE CRIAÇÃO"
+SITUACOES = [SITUACAO_ATIVA, SITUACAO_EXTINCAO, SITUACAO_CRIACAO]
+# Valores da coluna STATUS (PAINEL) (coluna AS da planilha), na ordem de exibição dos cartões.
+STATUS_PAINEL_VALIDOS = ["IMPLANTADO", "IMPLANTAÇÃO AGENDADA", "AGUARDANDO IMPLANTAÇÃO", "AGUARDANDO REFORMULAÇÃO"]
 
 COLUNAS_TEXTO = CHAVE_CURSO + ["TURNO", "SITUAÇÃO", "STATUS"]
 COLUNA_STATUS_PAINEL = "STATUS (PAINEL)"
@@ -21,6 +27,20 @@ PREFIXOS_NUMERICOS = ("CH_", "CRÉDITO", "CREDITO", "%", "QTDE")
 
 def _limpar_espacos(texto):
     return " ".join(str(texto).split())
+
+
+def _sem_acento(texto):
+    return "".join(c for c in unicodedata.normalize("NFD", texto) if unicodedata.category(c) != "Mn")
+
+
+def _canonico(valor, validos):
+    """Mapeia o texto da planilha para o valor oficial, ignorando caixa, acentos e espaços repetidos."""
+    limpo = _limpar_espacos(valor)
+    chave = _sem_acento(limpo).upper()
+    for oficial in validos:
+        if _sem_acento(oficial) == chave:
+            return oficial
+    return limpo
 
 
 def _limpar_emec(texto):
@@ -57,6 +77,9 @@ def carregar_linhas(caminho=CSV_PADRAO):
     for coluna in COLUNAS_TEXTO_OPCIONAIS:
         if coluna in linhas.columns:
             linhas[coluna] = linhas[coluna].map(_limpar_espacos)
+    linhas["SITUAÇÃO"] = linhas["SITUAÇÃO"].map(lambda v: _canonico(v, SITUACOES))
+    if COLUNA_STATUS_PAINEL in linhas.columns:
+        linhas[COLUNA_STATUS_PAINEL] = linhas[COLUNA_STATUS_PAINEL].map(lambda v: _canonico(v, STATUS_PAINEL_VALIDOS))
     if COLUNA_PPC_NOVO in linhas.columns:
         linhas["PPC_NOVO_PERIODO"] = linhas[COLUNA_PPC_NOVO].map(periodo_ppc)
     if COLUNA_PPC_ANTIGO in linhas.columns:
@@ -96,6 +119,16 @@ def cursos_ativos(cursos):
     return cursos[cursos["SITUAÇÃO"] == SITUACAO_ATIVA]
 
 
+def contagem_situacao(cursos):
+    """Cursos únicos por situação: em atividade, em extinção e em processo de criação."""
+    return {
+        "ativos": int((cursos["SITUAÇÃO"] == SITUACAO_ATIVA).sum()),
+        "extincao": int((cursos["SITUAÇÃO"] == SITUACAO_EXTINCAO).sum()),
+        "criacao": int((cursos["SITUAÇÃO"] == SITUACAO_CRIACAO).sum()),
+        "outras": int((~cursos["SITUAÇÃO"].isin(SITUACOES)).sum()),
+    }
+
+
 def resumo(linhas, cursos):
     return {
         "linhas": len(linhas),
@@ -105,6 +138,7 @@ def resumo(linhas, cursos):
         "conflitos_situacao": int(cursos["CONFLITO_SITUACAO"].sum()),
         "sem_emec": int(cursos["SEM_EMEC"].sum()),
         "cursos_ativos": len(cursos_ativos(cursos)),
+        "situacao_desconhecida": contagem_situacao(cursos)["outras"],
         "status_desconhecido": int((~cursos["STATUS"].isin(PRIORIDADE_STATUS)).sum()),
     }
 
